@@ -46,6 +46,10 @@ changing `turbo.json`.
 | `pnpm db:reset` | Rebuild the local database from migrations |
 | `pnpm db:types` | Regenerate `packages/db/src/database.types.ts` from the local database |
 | `pnpm db:test` | Run pgTAP tests in `supabase/tests/database` |
+| `pnpm test` | Run unit tests (Vitest, currently `packages/core`) via Turborepo |
+
+Local phone login: `+91 99999 99999` or `+91 99999 99998` with code `123456` (`[auth.sms.test_otp]`
+in `supabase/config.toml`; no SMS is sent). Auth config changes need `pnpm db:stop && pnpm db:start`.
 
 Schema change workflow: `pnpm db:new <name>` → write SQL (table + RLS + policies together) →
 `pnpm db:reset` → `pnpm db:types` → `pnpm db:test` → `pnpm typecheck`.

@@ -17,7 +17,8 @@
     "db:reset": "supabase db reset",
     "db:new": "supabase migration new",
     "db:test": "supabase test db",
-    "db:types": "supabase gen types typescript --local --schema public > packages/db/src/database.types.ts"
+    "db:types": "supabase gen types typescript --local --schema public > packages/db/src/database.types.ts",
+    "test": "turbo run test"
   },
   "devDependencies": {
     "supabase": "^2.119.0",
