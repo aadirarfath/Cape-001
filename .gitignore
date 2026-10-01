@@ -1,0 +1,46 @@
+# Dependencies
+node_modules/
+.pnpm-store/
+
+# Environment files (keep the .example templates)
+.env
+.env.*
+!.env.example
+*.local
+
+# Build output
+.next/
+out/
+dist/
+build/
+.turbo/
+*.tsbuildinfo
+next-env.d.ts
+
+# Expo / React Native
+.expo/
+.expo-shared/
+web-build/
+expo-env.d.ts
+apps/partner/ios/
+apps/partner/android/
+*.jks
+*.p8
+*.p12
+*.key
+*.mobileprovision
+
+# Supabase local state
+supabase/.branches/
+supabase/.temp/
+
+# Logs, coverage, OS and editor files
+*.log
+npm-debug.log*
+pnpm-debug.log*
+coverage/
+.DS_Store
+Thumbs.db
+.vscode/*
+!.vscode/extensions.json
+.idea/

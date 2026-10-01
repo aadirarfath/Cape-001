@@ -1,0 +1,27 @@
+{
+  "name": "cape001",
+  "private": true,
+  "packageManager": "pnpm@12.8.1",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "build": "turbo run build",
+    "dev": "turbo run dev",
+    "lint": "turbo run lint",
+    "typecheck": "turbo run typecheck",
+    "dev:web": "turbo run dev --filter=@cape001/web",
+    "dev:partner": "turbo run dev --filter=@cape001/partner",
+    "db:start": "supabase start",
+    "db:stop": "supabase stop",
+    "db:reset": "supabase db reset",
+    "db:new": "supabase migration new",
+    "db:test": "supabase test db",
+    "db:types": "supabase gen types typescript --local --schema public > packages/db/src/database.types.ts"
+  },
+  "devDependencies": {
+    "supabase": "^2.119.0",
+    "turbo": "^2.11.6",
+    "typescript": "5.9.3"
+  }
+}
