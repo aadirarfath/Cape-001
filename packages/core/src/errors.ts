@@ -25,6 +25,7 @@ export const DB_ERROR_CODES = [
   "CANCELLATION_WINDOW_PASSED",
   "INVALID_STATUS_TRANSITION",
   "LAST_OWNER",
+  "INVALID_NAME",
 ] as const;
 
 export type DbErrorCode = (typeof DB_ERROR_CODES)[number];

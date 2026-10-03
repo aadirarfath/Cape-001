@@ -193,6 +193,25 @@ isOneToOne: false
       referencedColumns: ["id"]
     }
                   ]
+                },"shop_photos": {
+                  Row: {
+                    "alt_text": string | null,"created_at": string,"id": string,"shop_id": string,"sort_order": number,"storage_path": string
+                  }
+                  Insert: {
+                    "alt_text"?: string | null,"created_at"?: string,"id"?: string,"shop_id": string,"sort_order"?: number,"storage_path": string
+                  }
+                  Update: {
+                    "alt_text"?: string | null,"created_at"?: string,"id"?: string,"shop_id"?: string,"sort_order"?: number,"storage_path"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "shop_photos_shop_id_fkey"
+      columns: ["shop_id"]
+isOneToOne: false
+      referencedRelation: "shops"
+      referencedColumns: ["id"]
+    }
+                  ]
                 },"shops": {
                   Row: {
                     "address_line": string,"approved_at": string | null,"approved_by": string | null,"area": string | null,"cancellation_cutoff_minutes": number,"city": string,"created_at": string,"created_by": string | null,"description": string | null,"id": string,"is_active": boolean,"location": unknown,"max_days_ahead": number,"name": string,"phone": string | null,"postal_code": string | null,"slot_interval_minutes": number,"slug": string,"state": string,"updated_at": string
@@ -297,6 +316,31 @@ isOneToOne: false
         isOneToOne: true
         isSetofReturn: false
       } },
+"book_any_barber":
+{ Args: { "p_customer_notes"?: string,"p_service_id": string,"p_shop_id": string,"p_starts_at": string }; Returns: {
+              "barber_id": string,
+"cancellation_reason": string | null,
+"cancelled_at": string | null,
+"cancelled_by": string | null,
+"created_at": string,
+"customer_id": string,
+"customer_notes": string | null,
+"duration_minutes": number,
+"ends_at": string,
+"id": string,
+"price_paise": number,
+"service_id": string,
+"shop_id": string,
+"starts_at": string,
+"status": Database["public"]['Enums']["booking_status"],
+"updated_at": string
+            }
+                          SetofOptions: {
+        from: "*"
+        to: "bookings"
+        isOneToOne: true
+        isSetofReturn: false
+      } },
 "book_appointment":
 { Args: { "p_barber_id": string,"p_customer_notes"?: string,"p_service_id": string,"p_starts_at": string }; Returns: {
               "barber_id": string,
@@ -381,6 +425,11 @@ isOneToOne: false
               "ends_at": string,"starts_at": string
             }[]
                            },
+"get_available_slots_any":
+{ Args: { "p_date": string,"p_service_id": string,"p_shop_id": string }; Returns: {
+              "ends_at": string,"starts_at": string
+            }[]
+                           },
 "nearby_shops":
 { Args: { "p_lat": number,"p_lng": number,"p_radius_m"?: number }; Returns: {
               "address_line": string,"area": string,"city": string,"distance_m": number,"id": string,"lat": number,"lng": number,"name": string,"phone": string,"slug": string
@@ -437,6 +486,21 @@ isOneToOne: false
                           SetofOptions: {
         from: "*"
         to: "bookings"
+        isOneToOne: true
+        isSetofReturn: false
+      } },
+"update_my_profile":
+{ Args: { "p_full_name": string }; Returns: {
+              "avatar_url": string | null,
+"created_at": string,
+"full_name": string | null,
+"id": string,
+"phone": string | null,
+"updated_at": string
+            }
+                          SetofOptions: {
+        from: "*"
+        to: "profiles"
         isOneToOne: true
         isSetofReturn: false
       } }

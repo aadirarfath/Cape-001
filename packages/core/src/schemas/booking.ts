@@ -15,6 +15,15 @@ export const bookAppointmentInputSchema = z.object({
 });
 export type BookAppointmentInput = z.infer<typeof bookAppointmentInputSchema>;
 
+/** book_any_barber: books whichever barber of the shop is free at p_starts_at. */
+export const bookAnyBarberInputSchema = z.object({
+  p_shop_id: uuidSchema,
+  p_service_id: uuidSchema,
+  p_starts_at: timestamptzSchema,
+  p_customer_notes: z.string().trim().max(500).optional(),
+});
+export type BookAnyBarberInput = z.infer<typeof bookAnyBarberInputSchema>;
+
 export const cancelBookingInputSchema = z.object({
   p_booking_id: uuidSchema,
   p_reason: z.string().trim().max(500).optional(),
@@ -27,6 +36,14 @@ export const getAvailableSlotsInputSchema = z.object({
   p_date: localDateSchema,
 });
 export type GetAvailableSlotsInput = z.infer<typeof getAvailableSlotsInputSchema>;
+
+/** get_available_slots_any: free start times across every barber offering the service. */
+export const getAvailableSlotsAnyInputSchema = z.object({
+  p_shop_id: uuidSchema,
+  p_service_id: uuidSchema,
+  p_date: localDateSchema,
+});
+export type GetAvailableSlotsAnyInput = z.infer<typeof getAvailableSlotsAnyInputSchema>;
 
 /** Longitude first, matching the SQL function and PostGIS. */
 export const nearbyShopsInputSchema = z.object({
