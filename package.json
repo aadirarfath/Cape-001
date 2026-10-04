@@ -18,7 +18,8 @@
     "db:new": "supabase migration new",
     "db:test": "supabase test db",
     "db:types": "supabase gen types typescript --local --schema public > packages/db/src/database.types.ts",
-    "test": "turbo run test"
+    "test": "turbo run test",
+    "test:functions": "node --test supabase/functions/*/*.test.ts"
   },
   "devDependencies": {
     "supabase": "^2.119.0",
