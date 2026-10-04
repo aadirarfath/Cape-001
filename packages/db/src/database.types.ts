@@ -5,7 +5,32 @@ export type Database = {
   
   "public": {
           Tables: {
-            "barber_services": {
+            "barber_invites": {
+                  Row: {
+                    "barber_id": string,"created_at": string,"invited_by": string | null,"phone": string,"shop_id": string
+                  }
+                  Insert: {
+                    "barber_id": string,"created_at"?: string,"invited_by"?: string | null,"phone": string,"shop_id": string
+                  }
+                  Update: {
+                    "barber_id"?: string,"created_at"?: string,"invited_by"?: string | null,"phone"?: string,"shop_id"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "barber_invites_barber_id_shop_id_fkey"
+      columns: ["barber_id","shop_id"]
+isOneToOne: false
+      referencedRelation: "barbers"
+      referencedColumns: ["id","shop_id"]
+    },{
+      foreignKeyName: "barber_invites_invited_by_fkey"
+      columns: ["invited_by"]
+isOneToOne: false
+      referencedRelation: "profiles"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"barber_services": {
                   Row: {
                     "barber_id": string,"service_id": string,"shop_id": string
                   }
@@ -148,6 +173,25 @@ isOneToOne: true
                   }
                   Relationships: [
                     
+                  ]
+                },"push_tokens": {
+                  Row: {
+                    "created_at": string,"id": string,"platform": string,"token": string,"updated_at": string,"user_id": string
+                  }
+                  Insert: {
+                    "created_at"?: string,"id"?: string,"platform": string,"token": string,"updated_at"?: string,"user_id"?: string
+                  }
+                  Update: {
+                    "created_at"?: string,"id"?: string,"platform"?: string,"token"?: string,"updated_at"?: string,"user_id"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "push_tokens_user_id_fkey"
+      columns: ["user_id"]
+isOneToOne: false
+      referencedRelation: "profiles"
+      referencedColumns: ["id"]
+    }
                   ]
                 },"services": {
                   Row: {
@@ -366,6 +410,11 @@ isOneToOne: false
         isOneToOne: true
         isSetofReturn: false
       } },
+"booking_notification_tokens":
+{ Args: { "p_booking_id": string }; Returns: {
+              "token": string,"user_id": string
+            }[]
+                           },
 "cancel_booking":
 { Args: { "p_booking_id": string,"p_reason"?: string }; Returns: {
               "barber_id": string,
@@ -390,6 +439,25 @@ isOneToOne: false
         to: "bookings"
         isOneToOne: true
         isSetofReturn: false
+      } },
+"claim_barber_invites":
+{ Args: Record<PropertyKey, never>; Returns: {
+              "avatar_url": string | null,
+"bio": string | null,
+"created_at": string,
+"display_name": string,
+"id": string,
+"is_active": boolean,
+"shop_id": string,
+"sort_order": number,
+"updated_at": string,
+"user_id": string | null
+            }[]
+                          SetofOptions: {
+        from: "*"
+        to: "barbers"
+        isOneToOne: false
+        isSetofReturn: true
       } },
 "create_shop":
 { Args: { "p_address_line": string,"p_area"?: string,"p_city"?: string,"p_description"?: string,"p_lat": number,"p_lng": number,"p_name": string,"p_phone"?: string,"p_postal_code"?: string,"p_slug": string }; Returns: {
@@ -430,11 +498,61 @@ isOneToOne: false
               "ends_at": string,"starts_at": string
             }[]
                            },
+"invite_barber":
+{ Args: { "p_barber_id": string,"p_phone": string }; Returns: {
+              "barber_id": string,
+"created_at": string,
+"invited_by": string | null,
+"phone": string,
+"shop_id": string
+            }
+                          SetofOptions: {
+        from: "*"
+        to: "barber_invites"
+        isOneToOne: true
+        isSetofReturn: false
+      } },
+"my_shops":
+{ Args: Record<PropertyKey, never>; Returns: {
+              "barber_id": string,"lat": number,"lng": number,"role": Database["public"]['Enums']["shop_role"],"shop_id": string
+            }[]
+                           },
 "nearby_shops":
 { Args: { "p_lat": number,"p_lng": number,"p_radius_m"?: number }; Returns: {
               "address_line": string,"area": string,"city": string,"distance_m": number,"id": string,"lat": number,"lng": number,"name": string,"phone": string,"slug": string
             }[]
                            },
+"set_barber_services":
+{ Args: { "p_barber_id": string,"p_service_ids": (string)[] }; Returns: {
+              "barber_id": string,
+"service_id": string,
+"shop_id": string
+            }[]
+                          SetofOptions: {
+        from: "*"
+        to: "barber_services"
+        isOneToOne: false
+        isSetofReturn: true
+      } },
+"set_shop_location":
+{ Args: { "p_lat": number,"p_lng": number,"p_shop_id": string }; Returns: undefined
+                           },
+"set_working_hours":
+{ Args: { "p_barber_id": string,"p_hours": Json }; Returns: {
+              "barber_id": string,
+"created_at": string,
+"end_time": string,
+"id": string,
+"shop_id": string,
+"start_time": string,
+"weekday": number
+            }[]
+                          SetofOptions: {
+        from: "*"
+        to: "working_hours"
+        isOneToOne: false
+        isSetofReturn: true
+      } },
 "suspend_shop":
 { Args: { "p_shop_id": string }; Returns: {
               "address_line": string,

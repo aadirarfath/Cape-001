@@ -26,6 +26,10 @@ export const DB_ERROR_CODES = [
   "INVALID_STATUS_TRANSITION",
   "LAST_OWNER",
   "INVALID_NAME",
+  "INVALID_PHONE",
+  "PHONE_ALREADY_INVITED",
+  "BARBER_ALREADY_LINKED",
+  "INVALID_WORKING_HOURS",
 ] as const;
 
 export type DbErrorCode = (typeof DB_ERROR_CODES)[number];

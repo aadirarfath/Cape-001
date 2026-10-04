@@ -162,3 +162,11 @@ values (
   ((now() at time zone 'Asia/Kolkata')::date + 1 + time '20:30') at time zone 'Asia/Kolkata',
   'Family function', '00000000-0000-4000-8000-000000000002'
 );
+
+-- Booking notifications (see the booking_notifications migration) --------------------------
+-- The database container reaches the local Edge Runtime through the host. The secret must
+-- match NOTIFY_BOOKING_SECRET for the notify-booking function. Local development only.
+select vault.create_secret(
+  'http://host.docker.internal:54321/functions/v1/notify-booking', 'notify_booking_url'
+);
+select vault.create_secret('local-dev-notify-booking-secret', 'notify_booking_secret');

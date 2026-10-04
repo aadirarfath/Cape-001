@@ -204,6 +204,11 @@ export const en = {
       INVALID_STATUS_TRANSITION: "That change isn't allowed for this booking.",
       LAST_OWNER: "A shop must keep at least one owner.",
       INVALID_NAME: "Enter your name (2 to 60 characters).",
+      // Partner app only; listed so every code has a message.
+      INVALID_PHONE: "Enter a 10-digit Indian mobile number.",
+      PHONE_ALREADY_INVITED: "That phone number is already used for another barber.",
+      BARBER_ALREADY_LINKED: "This barber is already linked to an account.",
+      INVALID_WORKING_HOURS: "Those working hours don't look right.",
     } satisfies Record<DbErrorCode, string>,
   },
 };
