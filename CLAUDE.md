@@ -48,6 +48,8 @@ changing `turbo.json`.
 | `pnpm db:test` | Run pgTAP tests in `supabase/tests/database` |
 | `pnpm test` | Run unit tests (Vitest, currently `packages/core`) via Turborepo |
 | `pnpm test:functions` | Run Edge Function unit tests (`supabase/functions/*/*.test.ts`, Node test runner) |
+| `pnpm test:scripts` | Run unit tests for the developer scripts in `scripts/` |
+| `pnpm db:approve-shop [slug]` | Local only: list pending shops, or approve one as the seeded admin. Refuses any non-local URL |
 
 Local phone login: `+91 99999 99999` or `+91 99999 99998` with code `123456` (`[auth.sms.test_otp]`
 in `supabase/config.toml`; no SMS is sent). Auth config changes need `pnpm db:stop && pnpm db:start`.

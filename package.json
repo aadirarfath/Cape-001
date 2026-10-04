@@ -19,7 +19,9 @@
     "db:test": "supabase test db",
     "db:types": "supabase gen types typescript --local --schema public > packages/db/src/database.types.ts",
     "test": "turbo run test",
-    "test:functions": "node --test supabase/functions/*/*.test.ts"
+    "test:functions": "node --test supabase/functions/*/*.test.ts",
+    "test:scripts": "node --test scripts/*.test.mjs",
+    "db:approve-shop": "node scripts/approve-shop.mjs"
   },
   "devDependencies": {
     "supabase": "^2.119.0",
