@@ -260,7 +260,10 @@ otp_expiry = 3600
 # Customers sign up and log in on the website with a phone OTP.
 enable_signup = true
 # If enabled, users need to confirm their phone number before signing in.
-enable_confirmations = false
+# Must stay true: otherwise a phone + password signup is auto-confirmed without an OTP, and
+# claim_barber_invites (which trusts auth.users.phone) could be claimed by a stranger.
+# OTP login is unaffected. The hosted project needs the same setting ("Confirm phone").
+enable_confirmations = true
 # Template for sending OTP to users
 template = "Your code is {{ .Code }}"
 # Controls the minimum amount of time that must pass before sending another sms otp.
@@ -391,6 +394,11 @@ deno_version = 2
 
 # [edge_runtime.secrets]
 # secret_key = "env(SECRET_VALUE)"
+
+# Called by the bookings triggers through pg_net, not by users: no JWT, it checks the
+# X-Webhook-Secret header against NOTIFY_BOOKING_SECRET (local: supabase/functions/.env).
+[functions.notify-booking]
+verify_jwt = false
 
 [analytics]
 enabled = true

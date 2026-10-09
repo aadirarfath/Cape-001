@@ -3,3 +3,4 @@ export * from "./format";
 export * from "./areas";
 export * from "./schemas";
 export * from "./errors";
+export * from "./slug";

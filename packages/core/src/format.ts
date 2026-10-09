@@ -23,3 +23,20 @@ export function formatDistance(metres: number, locale: string = APP_LOCALE): str
     maximumFractionDigits: metres < 10_000 ? 1 : 0,
   }).format(metres / 1000);
 }
+
+/**
+ * Format a phone number for display. Supabase Auth stores phones as digits without "+"
+ * ("919847012345"); Indian mobiles become "+91 98470 12345", anything else gets a "+" prefix.
+ */
+export function formatPhone(phone: string): string {
+  const digits = phone.replace(/\D/g, "");
+  if (digits.length === 12 && digits.startsWith("91")) {
+    return `+91 ${digits.slice(2, 7)} ${digits.slice(7)}`;
+  }
+  return digits ? `+${digits}` : "";
+}
+
+/** A tel: link for a stored phone number (with or without "+"), for tap-to-call. */
+export function telUrl(phone: string): string {
+  return `tel:+${phone.replace(/\D/g, "")}`;
+}

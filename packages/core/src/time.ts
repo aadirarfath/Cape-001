@@ -69,3 +69,48 @@ export function isBeforeCancellationCutoff(
   const start = typeof startsAt === "string" ? new Date(startsAt) : startsAt;
   return now.getTime() <= start.getTime() - cutoffMinutes * 60_000;
 }
+
+// India has a fixed UTC offset (no daylight saving), so local wall-clock times convert to
+// instants with a constant +05:30.
+const APP_UTC_OFFSET = "+05:30";
+
+/** The instant of a local date and "HH:MM" wall-clock time, as a UTC ISO string. */
+export function localDateTimeToIso(localDate: string, time: string): string {
+  return new Date(`${localDate}T${time}:00${APP_UTC_OFFSET}`).toISOString();
+}
+
+/** Start (inclusive) and end (exclusive) of a local calendar day, as UTC ISO strings. */
+export function localDayBounds(localDate: string): { start: string; end: string } {
+  return {
+    start: localDateTimeToIso(localDate, "00:00"),
+    end: localDateTimeToIso(addDaysToLocalDate(localDate, 1), "00:00"),
+  };
+}
+
+const localTimeFormatter = new Intl.DateTimeFormat("en-GB", {
+  timeZone: APP_TIME_ZONE,
+  hour: "2-digit",
+  minute: "2-digit",
+  hourCycle: "h23",
+});
+
+/** The Asia/Kolkata wall-clock time of an instant, as "HH:MM" (24-hour). */
+export function localTimeOf(value: string | Date): string {
+  const date = typeof value === "string" ? new Date(value) : value;
+  return localTimeFormatter.format(date);
+}
+
+/** Day of the week of a "YYYY-MM-DD" date, 0 = Sunday (like Postgres extract(dow)). */
+export function weekdayOfLocalDate(localDate: string): number {
+  return new Date(`${localDate}T00:00:00Z`).getUTCDay();
+}
+
+/** Format a "HH:MM" wall-clock time for display, e.g. "14:30" -> "2:30 pm". */
+export function formatWallClockTime(time: string, locale: string = APP_LOCALE): string {
+  const [hours, minutes] = time.split(":").map(Number);
+  return new Intl.DateTimeFormat(locale, {
+    hour: "numeric",
+    minute: "2-digit",
+    timeZone: "UTC",
+  }).format(Date.UTC(2000, 0, 1, hours, minutes));
+}
