@@ -1,4 +1,4 @@
-import type { DbErrorCode, KochiAreaId } from "@cape001/core";
+import type { DbErrorCode } from "@cape001/core";
 
 // All user-facing text for the website. To add a language, create e.g. `ml.ts` exporting
 // `const ml: Messages = { ... }` and register it in ./index.ts. Placeholders like {name} are
@@ -13,31 +13,72 @@ export const en = {
 
   site: {
     name: "Cape 001",
-    tagline: "Book barber and salon appointments in Kochi",
+    tagline: "Book barber and salon appointments in Kerala",
     description:
-      "Find barbers and salons near you in Kochi and book a time in seconds. See prices, pick your barber, no waiting.",
+      "Find barbers and salons near you in Kerala and book a time in seconds. See prices, pick your barber, no waiting.",
     nav: {
       myBookings: "My bookings",
       home: "Cape 001 home",
+      account: "Log in or sign up",
+      book: "Book an appointment",
+      bookShort: "Book",
+      partners: "For shops",
     },
-    footer: "Cape 001 · Kochi, Kerala",
+    footer: "Cape 001 · Kerala",
+    footerMade: "Made in Kerala",
   },
 
-  areas: {
-    edappally: "Edappally",
-    kakkanad: "Kakkanad",
-    "fort-kochi": "Fort Kochi",
-    kaloor: "Kaloor",
-    vyttila: "Vyttila",
-    aluva: "Aluva",
-  } satisfies Record<KochiAreaId, string>,
+  landing: {
+    wordmark: "CAPE-001",
+    tagline: "Barbers and salons across Kerala, booked in a minute",
+    scroll: "Scroll",
+    book: {
+      eyebrow: "01 — Book",
+      title: "Find a chair near you.",
+      body: "Pick your district and area, or let us find you. Every shop shows its real prices and live free times.",
+    },
+    how: {
+      eyebrow: "02 — How it works",
+      title: "Three taps to a fresh cut.",
+      steps: [
+        {
+          title: "Choose where",
+          body: "Your district and area, or your current location. We show the shops closest to you.",
+        },
+        {
+          title: "Choose who and when",
+          body: "Pick a service, your barber or anyone free, and a time that suits you. No calls, no waiting to hear back.",
+        },
+        {
+          title: "Walk in",
+          body: "Confirm with your phone number. Pay at the shop after your appointment, and cancel online if plans change.",
+        },
+      ],
+    },
+    quote: "No calls. No queues. Just your chair, at the time you picked.",
+    partners: {
+      eyebrow: "03 — For shops",
+      mark: "Partners",
+      title: "Run your shop from your phone.",
+      body: "Cape 001 Partner puts your bookings, barbers, services and working hours in one app. Customers find you, book a free slot, and you see it instantly.",
+      steps: [
+        "Download the Cape 001 Partner app",
+        "Create your shop while standing in it, so customers find you on the map",
+        "We check and approve it, usually within a day",
+        "Add your barbers, services and hours, and start taking bookings",
+      ],
+      cta: "Partner app coming soon",
+    },
+  },
 
   home: {
     title: "Your next haircut, booked in a minute",
     subtitle: "Find barbers near you, see prices and free times, and book without calling.",
     useLocation: "Use my current location",
     locating: "Finding your location…",
-    orPickArea: "Or choose an area",
+    orPickDistrict: "Or choose your district",
+    pickZone: "Choose an area in {district}",
+    allDistricts: "All districts",
     locationDenied: "Location access is off. Choose your area below instead.",
     locationUnavailable: "We couldn't get your location. Choose your area below instead.",
   },
@@ -45,6 +86,7 @@ export const en = {
   results: {
     title: "Barbers near you",
     titleNearArea: "Barbers near {area}",
+    areaInDistrict: "{area}, {district}",
     changeLocation: "Change",
     count: "{count} shops within {radius}",
     countOne: "1 shop within {radius}",

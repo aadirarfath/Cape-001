@@ -2,7 +2,8 @@ import {
   createShopInputSchema,
   formatPhone,
   getDbErrorCode,
-  KOCHI_AREAS,
+  findDistrict,
+  KERALA_DISTRICTS,
   pinCodeSchema,
   slugify,
   slugWithSuffix,
@@ -25,7 +26,8 @@ export default function CreateShopScreen() {
   const [phone, setPhone] = useState(profile?.phone ? formatPhone(profile.phone) : '');
   const [address, setAddress] = useState('');
   const [area, setArea] = useState('');
-  const [city, setCity] = useState('Kochi');
+  const [district, setDistrict] = useState<string | null>(null);
+  const [city, setCity] = useState('');
   const [pin, setPin] = useState('');
   const [location, setLocation] = useState<Coordinates | null>(null);
   const [fieldErrors, setFieldErrors] = useState<Partial<Record<Field, string>>>({});
@@ -33,6 +35,8 @@ export default function CreateShopScreen() {
   const [creating, setCreating] = useState(false);
   const [checking, setChecking] = useState(false);
   const [inviteMessage, setInviteMessage] = useState<string | null>(null);
+
+  const selectedDistrict = findDistrict(district);
 
   async function create() {
     const errors: Partial<Record<Field, string>> = {};
@@ -122,12 +126,31 @@ export default function CreateShopScreen() {
           maxLength={200}
           error={fieldErrors.address}
         />
-        <Label>{t.area}</Label>
+        <Label>{t.district}</Label>
         <ChipRow>
-          {KOCHI_AREAS.map((a) => (
-            <Chip key={a.id} label={m.areas[a.id]} selected={area === m.areas[a.id]} onPress={() => setArea(m.areas[a.id])} />
+          {KERALA_DISTRICTS.map((d) => (
+            <Chip
+              key={d.id}
+              label={d.name}
+              selected={district === d.id}
+              onPress={() => {
+                setDistrict(d.id);
+                setCity(d.name);
+              }}
+            />
           ))}
         </ChipRow>
+        {selectedDistrict ? (
+          <>
+            <Label>{t.area}</Label>
+            <Muted>{t.areaHint}</Muted>
+            <ChipRow>
+              {selectedDistrict.zones.map((z) => (
+                <Chip key={z.id} label={z.name} selected={area === z.name} onPress={() => setArea(z.name)} />
+              ))}
+            </ChipRow>
+          </>
+        ) : null}
         <TextField label={`${t.area} (${m.common.optional})`} value={area} onChangeText={setArea} maxLength={100} />
         <TextField label={t.city} value={city} onChangeText={setCity} maxLength={100} />
         <TextField

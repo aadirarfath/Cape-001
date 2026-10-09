@@ -3,12 +3,13 @@ import { router } from 'expo-router';
 import { useState } from 'react';
 import { View } from 'react-native';
 
-import { Body, Button, Notice, Screen, TextField, Title } from '@/components/ui';
+import { Body, Button, Grain, Notice, Screen, TextField, Title, Wordmark } from '@/components/ui';
 import { errorMessage, m } from '@/i18n';
 import { supabase } from '@/lib/supabase';
-import { space } from '@/theme';
+import { radius, space, useColors } from '@/theme';
 
 export default function LoginScreen() {
+  const colors = useColors();
   const [phoneText, setPhoneText] = useState('');
   const [fieldError, setFieldError] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -42,7 +43,22 @@ export default function LoginScreen() {
           onPress={sendCode}
         />
       }>
-      <View style={{ gap: space.sm, marginTop: space.xxl }}>
+      {/* Cover: the brand on black, textured. */}
+      <View
+        style={{
+          marginTop: space.xxl,
+          minHeight: 260,
+          borderRadius: radius.lg,
+          backgroundColor: colors.chrome,
+          padding: space.xl,
+          justifyContent: 'space-between',
+          overflow: 'hidden',
+        }}>
+        <Grain tone="onDark" />
+        <Body style={{ color: colors.chromeMuted, fontSize: 16 }}>{m.app.tagline}</Body>
+        <Wordmark size={44} color={colors.chromeText} subtitle={m.app.edition} />
+      </View>
+      <View style={{ gap: space.sm, marginTop: space.md }}>
         <Title>{m.auth.login.title}</Title>
         <Body>{m.auth.login.subtitle}</Body>
       </View>

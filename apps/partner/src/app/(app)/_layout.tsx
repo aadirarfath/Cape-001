@@ -4,11 +4,11 @@ import { useEffect } from 'react';
 import { m } from '@/i18n';
 import { bookingIdFromNotificationData, isExpoGo, loadNotifications, registerForPush } from '@/lib/push';
 import { useSession } from '@/lib/session';
-import { font, useColors } from '@/theme';
+import { useHeaderOptions } from '../_layout';
 
 export default function AppLayout() {
   const { isManager, session } = useSession();
-  const colors = useColors();
+  const headerOptions = useHeaderOptions();
   const userId = session?.user.id;
 
   // Save this phone's push token for the logged-in user (asks for permission the first time).
@@ -53,11 +53,7 @@ export default function AppLayout() {
   }, []);
 
   return (
-    <Stack
-      screenOptions={{
-        headerTitleStyle: { fontSize: font.large },
-        contentStyle: { backgroundColor: colors.background },
-      }}>
+    <Stack screenOptions={headerOptions}>
       <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
       <Stack.Screen name="booking/[id]" options={{ title: m.booking.title }} />
       <Stack.Screen name="time-off/[barberId]" options={{ title: m.timeOff.title }} />

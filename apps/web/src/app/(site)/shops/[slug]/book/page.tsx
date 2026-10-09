@@ -40,7 +40,7 @@ export default async function BookPage({ params }: { params: Params }) {
       <div className="space-y-1">
         <Link
           href={`/shops/${shop.slug}`}
-          className="-ml-1 inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground"
+          className="-ml-1 inline-flex min-h-10 items-center gap-1 text-sm text-muted-foreground hover:text-foreground"
         >
           <ChevronLeft className="size-4" aria-hidden />
           {shop.name}

@@ -2,6 +2,7 @@ import Ionicons from '@expo/vector-icons/Ionicons';
 import type { ComponentProps, ReactNode } from 'react';
 import {
   ActivityIndicator,
+  Image,
   KeyboardAvoidingView,
   Modal,
   Platform,
@@ -16,13 +17,53 @@ import {
   TextInput,
   View,
   type StyleProp,
+  type TextStyle,
   type ViewStyle,
 } from 'react-native';
 
 import { m } from '@/i18n';
-import { font, radius, space, touchHeight, useColors } from '@/theme';
+import { font, fonts, grain, radius, space, touchHeight, useColors, useIsDark } from '@/theme';
 
 export type IconName = ComponentProps<typeof Ionicons>['name'];
+
+// Texture ----------------------------------------------------------------------------------------
+
+/** Film grain over the whole parent. Purely decorative; never intercepts touches. */
+export function Grain({ tone, opacity = 1 }: { tone?: 'onLight' | 'onDark'; opacity?: number }) {
+  const isDark = useIsDark();
+  const onDark = tone ? tone === 'onDark' : isDark;
+  return (
+    <View
+      style={[StyleSheet.absoluteFill, { pointerEvents: 'none' }]}
+      accessible={false}
+      importantForAccessibility="no-hide-descendants">
+      <Image
+        source={onDark ? grain.light : grain.dark}
+        resizeMode="repeat"
+        style={{ width: '100%', height: '100%', opacity }}
+      />
+    </View>
+  );
+}
+
+/** The CAPE-001 wordmark in the wide display face. */
+export function Wordmark({ size = 34, color, subtitle }: { size?: number; color?: string; subtitle?: string }) {
+  const colors = useColors();
+  const tint = color ?? colors.text;
+  return (
+    <View accessibilityRole="header" accessibilityLabel={subtitle ? `${m.app.name} ${subtitle}` : m.app.name}>
+      <Text
+        numberOfLines={1}
+        adjustsFontSizeToFit
+        style={{ fontFamily: fonts.displayBold, fontSize: size, letterSpacing: -size * 0.03, color: tint }}>
+        CAPE-001
+      </Text>
+      {subtitle ? (
+        <Text style={[styles.eyebrow, { color: tint, opacity: 0.7, marginTop: space.xs }]}>{subtitle}</Text>
+      ) : null}
+    </View>
+  );
+}
 
 // Layout -----------------------------------------------------------------------------------------
 
@@ -44,25 +85,33 @@ export function Screen({
     <KeyboardAvoidingView
       style={{ flex: 1, backgroundColor: colors.background }}
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+      <Grain />
       <ScrollView
         contentContainerStyle={styles.screen}
         keyboardShouldPersistTaps="handled"
         refreshControl={
-          onRefresh ? <RefreshControl refreshing={refreshing ?? false} onRefresh={onRefresh} /> : undefined
+          onRefresh ? (
+            <RefreshControl refreshing={refreshing ?? false} onRefresh={onRefresh} tintColor={colors.text} colors={[colors.text]} />
+          ) : undefined
         }>
         {children}
       </ScrollView>
       {footer ? (
-        <View style={[styles.footer, { borderTopColor: colors.border, backgroundColor: colors.card }]}>{footer}</View>
+        <View style={[styles.footer, { borderTopColor: colors.ink, backgroundColor: colors.background }]}>{footer}</View>
       ) : null}
     </KeyboardAvoidingView>
   );
 }
 
 export function Section({ title, children, style }: { title?: string; children: ReactNode; style?: StyleProp<ViewStyle> }) {
+  const colors = useColors();
   return (
     <View style={[styles.section, style]}>
-      {title ? <Label style={styles.sectionTitle}>{title}</Label> : null}
+      {title ? (
+        <Text accessibilityRole="header" style={[styles.eyebrow, styles.sectionTitle, { color: colors.text, borderTopColor: colors.ink }]}>
+          {title}
+        </Text>
+      ) : null}
       {children}
     </View>
   );
@@ -76,7 +125,7 @@ export function Card({ children, onPress, style }: { children: ReactNode; onPres
     <Pressable
       onPress={onPress}
       accessibilityRole="button"
-      style={({ pressed }) => [cardStyle, pressed && { opacity: 0.7 }]}>
+      style={({ pressed }) => [cardStyle, pressed && { borderColor: colors.ink, transform: [{ scale: 0.99 }] }]}>
       {children}
     </Pressable>
   );
@@ -89,19 +138,26 @@ export function Title({ style, ...props }: TextProps) {
   return <Text accessibilityRole="header" style={[styles.title, { color: colors.text }, style]} {...props} />;
 }
 
+/** The serif family for a requested weight (custom fonts ignore fontWeight on Android). */
+function serifStyle(style: StyleProp<TextStyle>): TextStyle {
+  const weight = Number(StyleSheet.flatten(style)?.fontWeight ?? 400);
+  return { fontFamily: weight >= 600 ? fonts.serifSemiBold : weight >= 500 ? fonts.serifMedium : fonts.serif, fontWeight: 'normal' };
+}
+
 export function Body({ style, ...props }: TextProps) {
   const colors = useColors();
-  return <Text style={[styles.body, { color: colors.text }, style]} {...props} />;
+  return <Text style={[styles.body, { color: colors.text }, style, serifStyle(style)]} {...props} />;
 }
 
 export function Muted({ style, ...props }: TextProps) {
   const colors = useColors();
-  return <Text style={[styles.muted, { color: colors.muted }, style]} {...props} />;
+  return <Text style={[styles.muted, { color: colors.muted }, style, serifStyle(style)]} {...props} />;
 }
 
+/** Small, wide, uppercase: field labels and eyebrows. */
 export function Label({ style, ...props }: TextProps) {
   const colors = useColors();
-  return <Text style={[styles.label, { color: colors.text }, style]} {...props} />;
+  return <Text style={[styles.eyebrow, { color: colors.text }, style]} {...props} />;
 }
 
 // Buttons ----------------------------------------------------------------------------------------
@@ -128,7 +184,7 @@ export function Button({
   const colors = useColors();
   const palette = {
     primary: { bg: colors.primary, fg: colors.primaryText, border: colors.primary },
-    secondary: { bg: colors.secondary, fg: colors.secondaryText, border: colors.border },
+    secondary: { bg: 'transparent', fg: colors.text, border: colors.ink },
     danger: { bg: colors.danger, fg: colors.dangerText, border: colors.danger },
     ghost: { bg: 'transparent', fg: colors.text, border: 'transparent' },
   }[variant];
@@ -143,14 +199,14 @@ export function Button({
       style={({ pressed }) => [
         styles.button,
         { backgroundColor: palette.bg, borderColor: palette.border },
-        inactive && { opacity: 0.5 },
-        pressed && { opacity: 0.75 },
+        inactive && { opacity: 0.45 },
+        pressed && { opacity: 0.8, transform: [{ scale: 0.985 }] },
         style,
       ]}>
       {loading ? (
         <ActivityIndicator color={palette.fg} />
       ) : icon ? (
-        <Ionicons name={icon} size={24} color={palette.fg} />
+        <Ionicons name={icon} size={22} color={palette.fg} />
       ) : null}
       <Text style={[styles.buttonText, { color: palette.fg }]} numberOfLines={2}>
         {label}
@@ -176,13 +232,17 @@ export function MenuItem({
   const colors = useColors();
   return (
     <Card onPress={onPress} style={styles.menuItem}>
-      {icon ? <Ionicons name={icon} size={28} color={colors.text} /> : null}
+      {icon ? (
+        <View style={[styles.menuIcon, { borderColor: colors.ink }]}>
+          <Ionicons name={icon} size={22} color={colors.text} />
+        </View>
+      ) : null}
       <View style={{ flex: 1, gap: 2 }}>
         <Body style={{ fontWeight: '600' }}>{title}</Body>
         {subtitle ? <Muted>{subtitle}</Muted> : null}
       </View>
       {right}
-      {onPress ? <Ionicons name="chevron-forward" size={24} color={colors.muted} /> : null}
+      {onPress ? <Ionicons name="arrow-forward" size={20} color={colors.text} /> : null}
     </Card>
   );
 }
@@ -205,10 +265,12 @@ export function TextField({
       <View
         style={[
           styles.inputBox,
-          { borderColor: error ? colors.danger : colors.border, backgroundColor: colors.card },
-          multiline && { minHeight: 100, alignItems: 'flex-start' },
+          { borderColor: error ? colors.danger : colors.ink, backgroundColor: colors.card },
+          multiline && { minHeight: 100, alignItems: 'flex-start', borderRadius: radius.lg, paddingVertical: space.sm },
         ]}>
-        {prefix ? <Body style={{ color: colors.muted, marginRight: space.sm }}>{prefix}</Body> : null}
+        {prefix ? (
+          <Text style={[styles.prefix, { color: colors.text, borderRightColor: colors.border }]}>{prefix}</Text>
+        ) : null}
         <TextInput
           accessibilityLabel={label}
           placeholderTextColor={colors.muted}
@@ -254,7 +316,14 @@ export function SwitchRow({
         <Body style={{ fontWeight: '600' }}>{label}</Body>
         {hint ? <Muted style={styles.small}>{hint}</Muted> : null}
       </View>
-      <Switch value={value} onValueChange={onValueChange} disabled={disabled} />
+      <Switch
+        value={value}
+        onValueChange={onValueChange}
+        disabled={disabled}
+        trackColor={{ true: colors.ink, false: colors.border }}
+        thumbColor={Platform.OS === 'android' ? colors.card : undefined}
+        ios_backgroundColor={colors.border}
+      />
     </Pressable>
   );
 }
@@ -280,7 +349,7 @@ export function CheckRow({
       accessibilityLabel={label}
       style={({ pressed }) => [
         styles.switchRow,
-        { borderColor: checked ? colors.primary : colors.border, backgroundColor: colors.card },
+        { borderColor: checked ? colors.ink : colors.border, backgroundColor: colors.card },
         pressed && { opacity: 0.7 },
       ]}>
       <Ionicons name={checked ? 'checkbox' : 'square-outline'} size={30} color={checked ? colors.primary : colors.muted} />
@@ -302,8 +371,8 @@ export function Chip({ label, selected, onPress }: { label: string; selected: bo
       style={({ pressed }) => [
         styles.chip,
         {
-          backgroundColor: selected ? colors.primary : colors.card,
-          borderColor: selected ? colors.primary : colors.border,
+          backgroundColor: selected ? colors.primary : 'transparent',
+          borderColor: selected ? colors.primary : colors.ink,
         },
         pressed && { opacity: 0.7 },
       ]}>
@@ -322,18 +391,19 @@ type Tone = 'info' | 'success' | 'warning' | 'error';
 
 export function Notice({ tone = 'info', children }: { tone?: Tone; children: ReactNode }) {
   const colors = useColors();
+  // Black and white: tones differ by fill and outline; only errors use colour.
   const palette = {
-    info: { bg: colors.infoBg, fg: colors.info, icon: 'information-circle' as const },
-    success: { bg: colors.successBg, fg: colors.success, icon: 'checkmark-circle' as const },
-    warning: { bg: colors.warningBg, fg: colors.warning, icon: 'time' as const },
-    error: { bg: colors.errorBg, fg: colors.danger, icon: 'alert-circle' as const },
+    info: { bg: colors.card, border: colors.ink, fg: colors.text, icon: 'information-circle-outline' as const },
+    success: { bg: colors.primary, border: colors.primary, fg: colors.primaryText, icon: 'checkmark-circle' as const },
+    warning: { bg: colors.secondary, border: colors.secondary, fg: colors.text, icon: 'time-outline' as const },
+    error: { bg: colors.errorBg, border: colors.danger, fg: colors.danger, icon: 'alert-circle' as const },
   }[tone];
   return (
     <View
-      style={[styles.notice, { backgroundColor: palette.bg }]}
+      style={[styles.notice, { backgroundColor: palette.bg, borderColor: palette.border }]}
       accessibilityLiveRegion={tone === 'error' ? 'assertive' : 'polite'}>
-      <Ionicons name={palette.icon} size={24} color={palette.fg} />
-      <Body style={{ flex: 1, color: colors.text }}>{children}</Body>
+      <Ionicons name={palette.icon} size={22} color={palette.fg} />
+      <Body style={{ flex: 1, color: tone === 'error' ? colors.text : palette.fg }}>{children}</Body>
     </View>
   );
 }
@@ -352,7 +422,9 @@ export function EmptyState({ icon, title, body }: { icon: IconName; title: strin
   const colors = useColors();
   return (
     <View style={styles.empty}>
-      <Ionicons name={icon} size={48} color={colors.muted} />
+      <View style={[styles.emptyIcon, { borderColor: colors.ink }]}>
+        <Ionicons name={icon} size={32} color={colors.text} />
+      </View>
       <Body style={{ textAlign: 'center', fontWeight: '600' }}>{title}</Body>
       {body ? <Muted style={{ textAlign: 'center' }}>{body}</Muted> : null}
     </View>
@@ -391,7 +463,7 @@ export function ConfirmDialog({
       <KeyboardAvoidingView
         style={styles.backdrop}
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-        <View style={[styles.dialog, { backgroundColor: colors.card }]}>
+        <View style={[styles.dialog, { backgroundColor: colors.card, borderColor: colors.ink }]}>
           <Title style={{ fontSize: font.large }}>{title}</Title>
           {body ? <Body>{body}</Body> : null}
           {children}
@@ -413,17 +485,17 @@ const styles = StyleSheet.create({
   screen: { padding: space.lg, gap: space.lg, paddingBottom: space.xxl },
   footer: { padding: space.lg, borderTopWidth: StyleSheet.hairlineWidth, gap: space.sm },
   section: { gap: space.md },
-  sectionTitle: { fontSize: font.large, marginTop: space.sm },
+  sectionTitle: { marginTop: space.md, paddingTop: space.md, borderTopWidth: 1 },
   card: { borderWidth: 1, borderRadius: radius.lg, padding: space.lg, gap: space.sm },
-  title: { fontSize: font.title, fontWeight: '700' },
-  body: { fontSize: font.body, lineHeight: 26 },
-  muted: { fontSize: font.body, lineHeight: 24 },
+  title: { fontSize: font.title, fontFamily: fonts.displayBold, letterSpacing: -0.6, lineHeight: 34 },
+  body: { fontSize: font.body, lineHeight: 26, fontFamily: fonts.serif },
+  muted: { fontSize: font.body, lineHeight: 24, fontFamily: fonts.serif },
   small: { fontSize: font.small, lineHeight: 21 },
-  label: { fontSize: font.body, fontWeight: '600' },
+  eyebrow: { fontSize: 13, fontFamily: fonts.display, letterSpacing: 1.2, textTransform: 'uppercase' },
   button: {
     minHeight: touchHeight,
-    borderRadius: radius.lg,
-    borderWidth: 1,
+    borderRadius: radius.pill,
+    borderWidth: 1.5,
     paddingHorizontal: space.lg,
     paddingVertical: space.md,
     flexDirection: 'row',
@@ -431,26 +503,34 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     gap: space.sm,
   },
-  buttonText: { fontSize: font.large, fontWeight: '600', textAlign: 'center', flexShrink: 1 },
-  menuItem: { flexDirection: 'row', alignItems: 'center', gap: space.lg, minHeight: 72 },
+  buttonText: { fontSize: 16, fontFamily: fonts.display, letterSpacing: 0.2, textAlign: 'center', flexShrink: 1 },
+  menuItem: { flexDirection: 'row', alignItems: 'center', gap: space.lg, minHeight: 76 },
+  menuIcon: { width: 44, height: 44, borderRadius: radius.pill, borderWidth: 1, alignItems: 'center', justifyContent: 'center' },
   field: { gap: space.sm },
   inputBox: {
     minHeight: touchHeight,
     borderWidth: 1.5,
-    borderRadius: radius.md,
-    paddingHorizontal: space.md,
+    borderRadius: radius.pill,
+    paddingHorizontal: space.lg,
     flexDirection: 'row',
     alignItems: 'center',
   },
-  input: { flex: 1, fontSize: font.large, paddingVertical: space.md },
+  input: { flex: 1, fontSize: font.large, paddingVertical: space.md, fontFamily: fonts.serif },
+  prefix: {
+    fontSize: font.body,
+    fontFamily: fonts.display,
+    paddingRight: space.md,
+    marginRight: space.md,
+    borderRightWidth: 1,
+  },
   switchRow: {
     minHeight: touchHeight,
     flexDirection: 'row',
     alignItems: 'center',
     gap: space.md,
-    borderWidth: 1.5,
-    borderRadius: radius.md,
-    padding: space.md,
+    borderWidth: 1,
+    borderRadius: radius.lg,
+    padding: space.lg,
   },
   chip: {
     minHeight: 48,
@@ -459,11 +539,19 @@ const styles = StyleSheet.create({
     borderWidth: 1.5,
     justifyContent: 'center',
   },
-  chipText: { fontSize: font.body, fontWeight: '600' },
+  chipText: { fontSize: 15, fontFamily: fonts.display, letterSpacing: 0.2 },
   chipRow: { flexDirection: 'row', flexWrap: 'wrap', gap: space.sm },
-  notice: { flexDirection: 'row', gap: space.md, padding: space.md, borderRadius: radius.md, alignItems: 'flex-start' },
+  notice: {
+    flexDirection: 'row',
+    gap: space.md,
+    padding: space.lg,
+    borderRadius: radius.lg,
+    borderWidth: 1,
+    alignItems: 'flex-start',
+  },
   center: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: space.md },
-  empty: { alignItems: 'center', gap: space.sm, paddingVertical: space.xxl, paddingHorizontal: space.lg },
-  backdrop: { flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'center', padding: space.lg },
-  dialog: { borderRadius: radius.lg, padding: space.xl, gap: space.md },
+  empty: { alignItems: 'center', gap: space.md, paddingVertical: space.xxl, paddingHorizontal: space.lg },
+  emptyIcon: { width: 72, height: 72, borderRadius: radius.pill, borderWidth: 1, alignItems: 'center', justifyContent: 'center' },
+  backdrop: { flex: 1, backgroundColor: 'rgba(0,0,0,0.6)', justifyContent: 'center', padding: space.lg },
+  dialog: { borderRadius: radius.lg, borderWidth: 1, padding: space.xl, gap: space.md },
 });

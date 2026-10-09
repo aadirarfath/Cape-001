@@ -13,7 +13,7 @@ export default function ErrorPage({ error, reset }: { error: Error & { digest?: 
   }, [error]);
 
   return (
-    <div className="space-y-4 pt-8 text-center">
+    <main className="mx-auto w-full max-w-2xl flex-1 space-y-4 px-4 pb-24 pt-32 text-center">
       <h1 className="text-xl font-semibold">{m.errors.generic}</h1>
       <div className="flex justify-center gap-2">
         <Button onClick={reset}>{m.errors.tryAgain}</Button>
@@ -21,6 +21,6 @@ export default function ErrorPage({ error, reset }: { error: Error & { digest?: 
           {m.errors.goHome}
         </Link>
       </div>
-    </div>
+    </main>
   );
 }

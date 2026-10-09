@@ -43,8 +43,8 @@ export async function middleware(request: NextRequest) {
 export const config = {
   matcher: [
     {
-      // Everything except static assets and image optimisation.
-      source: "/((?!_next/static|_next/image|favicon.ico|.*\.(?:svg|png|jpg|jpeg|gif|webp|ico)$).*)",
+      // Everything except static assets (images, video) and image optimisation.
+      source: "/((?!_next/static|_next/image|favicon.ico|.*\.(?:svg|png|jpg|jpeg|gif|webp|ico|mp4|webm)$).*)",
       missing: [
         { type: "header", key: "next-router-prefetch" },
         { type: "header", key: "purpose", value: "prefetch" },

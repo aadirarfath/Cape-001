@@ -1,6 +1,8 @@
 import "server-only";
+import { unstable_cache } from "next/cache";
 import { cache } from "react";
 import { shopSlugSchema } from "@cape001/core";
+import type { Database } from "@cape001/db";
 import { SUPABASE_URL } from "@/lib/env";
 import { createPublicClient } from "@/lib/supabase/public";
 
@@ -15,9 +17,21 @@ export function shopPhotoUrl(storagePath: string): string {
   return `${SUPABASE_URL}/storage/v1/object/public/${SHOP_PHOTOS_BUCKET}/${encoded}`;
 }
 
+// Public catalogue data is cached across requests for this long. Changes made in the partner app
+// (services, prices, barbers, hours shown here) appear on the website within this window; the
+// booking functions always check live data, so a stale page can't create an invalid booking.
+const CATALOGUE_REVALIDATE_SECONDS = 60;
+
 export const getShopBySlug = cache(async (slug: string) => {
   if (!shopSlugSchema.safeParse(slug).success) return null;
+  return getShopBySlugCached(slug);
+});
 
+const getShopBySlugCached = unstable_cache(loadShop, ["shop-by-slug"], {
+  revalidate: CATALOGUE_REVALIDATE_SECONDS,
+});
+
+async function loadShop(slug: string) {
   const supabase = createPublicClient();
 
   const { data: shop, error } = await supabase
@@ -67,28 +81,41 @@ export const getShopBySlug = cache(async (slug: string) => {
     barberServices: barberServices.data ?? [],
     photos: (photos.data ?? []).map((photo) => ({ ...photo, url: shopPhotoUrl(photo.storage_path) })),
   };
-});
+}
 
 export type ShopDetails = NonNullable<Awaited<ReturnType<typeof getShopBySlug>>>;
 
-/** Lowest active service price per shop, for "from ₹X" on the results page. */
-export async function getStartingPrices(shopIds: string[]): Promise<Map<string, number>> {
-  const prices = new Map<string, number>();
-  if (shopIds.length === 0) return prices;
+type NearbyShopsInput = Database["public"]["Functions"]["nearby_shops"]["Args"];
 
-  const { data, error } = await createPublicClient()
-    .from("services")
-    .select("shop_id, price_paise")
-    .in("shop_id", shopIds)
-    .eq("is_active", true);
-  if (error) throw error;
+/**
+ * Active shops near a point, each with its lowest active service price ("from ₹X"), or null
+ * when it has no services. Cached per location and radius.
+ */
+export const searchNearbyShops = unstable_cache(
+  async (input: NearbyShopsInput) => {
+    const supabase = createPublicClient();
+    const { data: shops, error } = await supabase.rpc("nearby_shops", input);
+    if (error) throw error;
+    if (shops.length === 0) return [];
 
-  for (const { shop_id, price_paise } of data) {
-    const current = prices.get(shop_id);
-    if (current === undefined || price_paise < current) prices.set(shop_id, price_paise);
-  }
-  return prices;
-}
+    const { data: services, error: servicesError } = await supabase
+      .from("services")
+      .select("shop_id, price_paise")
+      .in(
+        "shop_id",
+        shops.map((shop) => shop.id),
+      )
+      .eq("is_active", true);
+    if (servicesError) throw servicesError;
+
+    return shops.map((shop) => {
+      const prices = services.filter((s) => s.shop_id === shop.id).map((s) => s.price_paise);
+      return { ...shop, startingPrice: prices.length > 0 ? Math.min(...prices) : null };
+    });
+  },
+  ["nearby-shops"],
+  { revalidate: CATALOGUE_REVALIDATE_SECONDS },
+);
 
 /** A Google Maps search link for the address. Opens the Maps app on phones; no API key needed. */
 export function mapsSearchUrl(shop: Pick<ShopDetails, "name" | "address_line" | "area" | "city">): string {

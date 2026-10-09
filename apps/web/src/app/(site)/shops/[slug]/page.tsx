@@ -97,7 +97,12 @@ export default async function ShopPage({ params }: { params: Params }) {
 
   return (
     <article className="space-y-8 pb-20">
-      <script type="application/ld+json" nonce={nonce} dangerouslySetInnerHTML={{ __html: jsonLd }} />
+      {/* Browsers blank the nonce attribute after load, so React would report a false mismatch. */}
+      <script
+        type="application/ld+json"
+        nonce={nonce}
+        suppressHydrationWarning
+        dangerouslySetInnerHTML={{ __html: jsonLd }} />
 
       <ShopPhotos
         name={shop.name}

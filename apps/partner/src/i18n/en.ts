@@ -1,4 +1,4 @@
-import type { DbErrorCode, KochiAreaId } from '@cape001/core';
+import type { DbErrorCode } from '@cape001/core';
 import type { Enums } from '@cape001/db';
 
 // All user-facing text for the partner app. To add a language, create e.g. `ml.ts` exporting
@@ -14,6 +14,8 @@ export const en = {
 
   app: {
     name: 'Cape 001 Partner',
+    edition: 'Partner',
+    tagline: 'Your chair, your bookings, one app.',
   },
 
   common: {
@@ -73,15 +75,6 @@ export const en = {
     } satisfies Record<DbErrorCode, string>,
   },
 
-  areas: {
-    edappally: 'Edappally',
-    kakkanad: 'Kakkanad',
-    'fort-kochi': 'Fort Kochi',
-    kaloor: 'Kaloor',
-    vyttila: 'Vyttila',
-    aluva: 'Aluva',
-  } satisfies Record<KochiAreaId, string>,
-
   status: {
     pending: 'Waiting',
     confirmed: 'Booked',
@@ -138,7 +131,9 @@ export const en = {
       shopPhone: 'Shop phone',
       address: 'Address',
       addressPlaceholder: 'Building, street, landmark',
+      district: 'District',
       area: 'Area',
+      areaHint: 'Pick the nearest area, or type it below.',
       city: 'City',
       pin: 'PIN code',
       invalidPin: 'Enter a 6-digit PIN code.',

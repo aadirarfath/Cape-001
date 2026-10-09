@@ -73,6 +73,18 @@ the full pre-launch checklist in [DEPLOY.md](DEPLOY.md).
 - [ ] **Expo Go is for the demo only.** The app runs from a dev server on a laptop
       (`pnpm dev:partner`), signed in to Expo as the developer. Real users need a production
       build; see "Partner app (Android)" in DEPLOY.md, and add an iOS build if shops use iPhones.
+- [ ] **Make a lighter hero video for phones.** `apps/web/public/hero.mp4` is 4.5 MB at
+      2560×1440 and every visitor downloads it, including on mobile data. Encode a ~720p version
+      (H.264, no audio, `-movflags +faststart`, roughly 1 MB) and serve it to small screens, plus
+      a poster image for the first frame. No ffmpeg on the dev machine yet.
+- [ ] **Link the website's "For shops" section to the stores.** The home page shows a
+      "Partner app coming soon" label instead of a download button
+      (`landing.partners.cta` in `apps/web/src/i18n/en.ts`). Replace it with Play Store / App
+      Store links once the Partner app is published.
+- [ ] **Replace the partner app's icon and splash screen.** They are still the Expo template's
+      (blue splash `#208AEF`, template icons in `apps/partner/assets/images`). Make black-and-white
+      ones matching the new design and update `app.json`; this only shows in real builds, not in
+      Expo Go.
 - [ ] **The partner app does not run in a browser.** It stores the session with
       `expo-secure-store`, which has no web support. Fine for a phone-only app; remove the `web`
       script and `web` block in `app.json` if a web version is not planned.

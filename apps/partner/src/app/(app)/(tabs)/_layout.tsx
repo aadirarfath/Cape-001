@@ -1,9 +1,11 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { Tabs } from 'expo-router';
+import { View } from 'react-native';
 
 import { m } from '@/i18n';
 import { useSession } from '@/lib/session';
-import { font, useColors } from '@/theme';
+import { Grain } from '@/components/ui';
+import { fonts, useColors } from '@/theme';
 
 export default function TabsLayout() {
   const { isManager, shop } = useSession();
@@ -11,11 +13,20 @@ export default function TabsLayout() {
   return (
     <Tabs
       screenOptions={{
-        headerTitleStyle: { fontSize: font.large },
-        tabBarActiveTintColor: colors.text,
-        tabBarInactiveTintColor: colors.muted,
-        tabBarLabelStyle: { fontSize: 14, fontWeight: '600' },
-        tabBarStyle: { height: 72, paddingTop: 6 },
+        headerTitleStyle: { fontSize: 17, fontFamily: fonts.display, color: colors.text },
+        headerStyle: { backgroundColor: colors.background },
+        headerShadowVisible: false,
+        headerTintColor: colors.text,
+        // Black textured bar: the one solid block of ink in the app.
+        tabBarActiveTintColor: colors.chromeText,
+        tabBarInactiveTintColor: colors.chromeMuted,
+        tabBarLabelStyle: { fontSize: 11, fontFamily: fonts.display, letterSpacing: 0.8, textTransform: 'uppercase' },
+        tabBarStyle: { height: 76, paddingTop: 8, borderTopWidth: 0, backgroundColor: colors.chrome },
+        tabBarBackground: () => (
+          <View style={{ flex: 1, backgroundColor: colors.chrome }}>
+            <Grain tone="onDark" />
+          </View>
+        ),
         sceneStyle: { backgroundColor: colors.background },
       }}>
       <Tabs.Screen
@@ -23,7 +34,7 @@ export default function TabsLayout() {
         options={{
           title: shop?.name ?? m.schedule.title,
           tabBarLabel: m.tabs.schedule,
-          tabBarIcon: ({ color }) => <Ionicons name="calendar" size={28} color={color} />,
+          tabBarIcon: ({ color }) => <Ionicons name="calendar" size={26} color={color} />,
         }}
       />
       <Tabs.Protected guard={isManager}>
@@ -32,7 +43,7 @@ export default function TabsLayout() {
           options={{
             title: m.manage.title,
             tabBarLabel: m.tabs.shop,
-            tabBarIcon: ({ color }) => <Ionicons name="storefront" size={28} color={color} />,
+            tabBarIcon: ({ color }) => <Ionicons name="storefront" size={26} color={color} />,
           }}
         />
       </Tabs.Protected>
@@ -41,7 +52,7 @@ export default function TabsLayout() {
         options={{
           title: m.me.title,
           tabBarLabel: m.tabs.me,
-          tabBarIcon: ({ color }) => <Ionicons name="person-circle" size={28} color={color} />,
+          tabBarIcon: ({ color }) => <Ionicons name="person-circle" size={26} color={color} />,
         }}
       />
     </Tabs>

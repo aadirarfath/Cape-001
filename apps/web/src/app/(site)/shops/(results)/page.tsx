@@ -1,12 +1,11 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { ChevronRight, MapPin } from "lucide-react";
-import { findKochiArea, formatDistance, formatPricePaise, nearbyShopsInputSchema } from "@cape001/core";
+import { findLegacyKochiArea, findZone, formatDistance, formatPricePaise, nearbyShopsInputSchema } from "@cape001/core";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { buttonVariants } from "@/components/ui/button";
 import { format, getMessages } from "@/i18n";
-import { createClient } from "@/lib/supabase/server";
-import { getStartingPrices } from "@/lib/shops";
+import { searchNearbyShops } from "@/lib/shops";
 
 const RADII_M = [5_000, 15_000, 50_000] as const;
 
@@ -26,7 +25,11 @@ export default async function ShopsPage({ searchParams }: { searchParams: Search
   const locale = m.meta.intlLocale;
   const params = await searchParams;
 
-  const area = findKochiArea(first(params.area));
+  // A district + zone picked on the home page, an old ?area= Kochi link, or browser coordinates.
+  const picked = findZone(first(params.district), first(params.zone)) ?? findLegacyKochiArea(first(params.area));
+  const area = picked?.zone;
+  // "Change" returns to the zones of the same district.
+  const changeHref = picked ? `/?district=${picked.district.id}#book` : "/#book";
   const radius = RADII_M.find((r) => String(r) === first(params.radius)) ?? RADII_M[0];
   const input = nearbyShopsInputSchema.safeParse({
     p_lng: area ? area.lng : Number(first(params.lng)),
@@ -40,21 +43,19 @@ export default async function ShopsPage({ searchParams }: { searchParams: Search
         <Alert>
           <AlertDescription>{m.results.invalidLocation}</AlertDescription>
         </Alert>
-        <Link href="/" className={buttonVariants({ variant: "outline" })}>
+        <Link href={changeHref} className={buttonVariants({ variant: "outline" })}>
           {m.results.pickAnotherArea}
         </Link>
       </div>
     );
   }
 
-  const supabase = await createClient();
-  const { data: shops, error } = await supabase.rpc("nearby_shops", input.data);
-  if (error) throw error;
-
-  const prices = await getStartingPrices(shops.map((shop) => shop.id));
+  const shops = await searchNearbyShops(input.data);
   const radiusText = formatDistance(radius, locale);
   const widerRadius = RADII_M.find((r) => r > radius);
-  const locationQuery = area ? `area=${area.id}` : `lat=${input.data.p_lat}&lng=${input.data.p_lng}`;
+  const locationQuery = picked
+    ? `district=${picked.district.id}&zone=${picked.zone.id}`
+    : `lat=${input.data.p_lat}&lng=${input.data.p_lng}`;
   const widerLink = widerRadius && (
     <Link
       href={`/shops?${locationQuery}&radius=${widerRadius}`}
@@ -69,7 +70,11 @@ export default async function ShopsPage({ searchParams }: { searchParams: Search
       <div className="flex items-start justify-between gap-3">
         <div>
           <h1 className="text-2xl font-bold tracking-tight">
-            {area ? format(m.results.titleNearArea, { area: m.areas[area.id] }) : m.results.title}
+            {picked
+              ? format(m.results.titleNearArea, {
+                  area: format(m.results.areaInDistrict, { area: picked.zone.name, district: picked.district.name }),
+                })
+              : m.results.title}
           </h1>
           {shops.length > 0 && (
             <p className="text-sm text-muted-foreground">
@@ -79,7 +84,7 @@ export default async function ShopsPage({ searchParams }: { searchParams: Search
             </p>
           )}
         </div>
-        <Link href="/" className={buttonVariants({ variant: "outline", size: "sm" })}>
+        <Link href={changeHref} className={buttonVariants({ variant: "outline", size: "sm" })}>
           <MapPin aria-hidden />
           {m.results.changeLocation}
         </Link>
@@ -91,7 +96,7 @@ export default async function ShopsPage({ searchParams }: { searchParams: Search
           <p className="text-sm text-muted-foreground">{format(m.results.noResultsBody, { radius: radiusText })}</p>
           <div className="flex flex-col gap-2">
             {widerLink}
-            <Link href="/" className={buttonVariants({ variant: "outline", className: "w-full" })}>
+            <Link href={changeHref} className={buttonVariants({ variant: "outline", className: "w-full" })}>
               {m.results.pickAnotherArea}
             </Link>
           </div>
@@ -100,7 +105,7 @@ export default async function ShopsPage({ searchParams }: { searchParams: Search
         <>
           <ul className="space-y-3">
             {shops.map((shop) => {
-              const price = prices.get(shop.id);
+              const price = shop.startingPrice;
               return (
                 <li key={shop.id}>
                   <Link
@@ -114,7 +119,7 @@ export default async function ShopsPage({ searchParams }: { searchParams: Search
                       </p>
                       <p className="flex flex-wrap gap-x-3 text-sm">
                         <span>{format(m.results.away, { distance: formatDistance(shop.distance_m, locale) })}</span>
-                        {price !== undefined && (
+                        {price !== null && (
                           <span className="font-medium">
                             {format(m.results.fromPrice, { price: formatPricePaise(price, locale) })}
                           </span>

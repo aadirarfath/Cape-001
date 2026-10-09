@@ -1,16 +1,27 @@
 import type { Metadata, Viewport } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Archivo, Geist_Mono, Newsreader } from "next/font/google";
 import { headers } from "next/headers";
-import Link from "next/link";
-import { CalendarDays, Scissors } from "lucide-react";
-import { SITE_URL } from "@/lib/env";
+import { preconnect } from "react-dom";
+import { SiteFooter } from "@/components/site/site-footer";
+import { SiteNav } from "@/components/site/site-nav";
+import { SITE_URL, SUPABASE_URL } from "@/lib/env";
 import { getMessages } from "@/i18n";
 import { MessagesProvider } from "@/i18n/provider";
 import "./globals.css";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
+// Archivo at full width (wdth 125) stands in for the expanded display face of the design
+// reference; Newsreader is the editorial serif for everything else. Both are self-hosted by
+// next/font, so the CSP's font-src 'self' still holds.
+const archivo = Archivo({
+  variable: "--font-archivo",
   subsets: ["latin"],
+  axes: ["wdth"],
+});
+
+const newsreader = Newsreader({
+  variable: "--font-newsreader",
+  subsets: ["latin"],
+  axes: ["opsz"],
 });
 
 const geistMono = Geist_Mono({
@@ -43,29 +54,18 @@ export default async function RootLayout({
   children: React.ReactNode;
 }>) {
   await headers();
+  // Shop photos, free-slot lookups and login all talk to Supabase from the browser; open the
+  // connection early so the first of those requests doesn't pay for DNS and TLS.
+  preconnect(SUPABASE_URL, { crossOrigin: "anonymous" });
 
   return (
-    <html lang={m.meta.htmlLang} className={`${geistSans.variable} ${geistMono.variable}`}>
-      <body className="antialiased">
+    <html lang={m.meta.htmlLang} className={`${archivo.variable} ${newsreader.variable} ${geistMono.variable}`}>
+      <body className="bg-paper text-ink antialiased">
         <MessagesProvider messages={m}>
           <div className="flex min-h-dvh flex-col">
-            <header className="sticky top-0 z-20 border-b bg-background/95 backdrop-blur">
-              <nav className="mx-auto flex h-14 max-w-2xl items-center justify-between px-4">
-                <Link href="/" className="flex items-center gap-2 font-semibold" aria-label={m.site.nav.home}>
-                  <Scissors className="size-5" aria-hidden />
-                  {m.site.name}
-                </Link>
-                <Link
-                  href="/bookings"
-                  className="flex items-center gap-1.5 rounded-lg px-2 py-1.5 text-sm font-medium hover:bg-muted"
-                >
-                  <CalendarDays className="size-4" aria-hidden />
-                  {m.site.nav.myBookings}
-                </Link>
-              </nav>
-            </header>
-            <main className="mx-auto w-full max-w-2xl flex-1 px-4 pb-16 pt-6">{children}</main>
-            <footer className="border-t py-6 text-center text-xs text-muted-foreground">{m.site.footer}</footer>
+            <SiteNav />
+            {children}
+            <SiteFooter />
           </div>
         </MessagesProvider>
       </body>

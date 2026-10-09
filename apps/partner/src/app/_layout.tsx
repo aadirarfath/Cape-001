@@ -1,19 +1,62 @@
+import { Newsreader_400Regular } from '@expo-google-fonts/newsreader/400Regular';
+import { Newsreader_500Medium } from '@expo-google-fonts/newsreader/500Medium';
+import { Newsreader_600SemiBold } from '@expo-google-fonts/newsreader/600SemiBold';
+import { Unbounded_600SemiBold } from '@expo-google-fonts/unbounded/600SemiBold';
+import { Unbounded_700Bold } from '@expo-google-fonts/unbounded/700Bold';
+import { useFonts } from 'expo-font';
 import { DarkTheme, DefaultTheme, Stack, ThemeProvider } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { useEffect, useState } from 'react';
-import { useColorScheme, View } from 'react-native';
+import { View } from 'react-native';
 
-import { Body, Button, Notice, Title } from '@/components/ui';
+import { Body, Button, Grain, Notice, Title } from '@/components/ui';
 import { errorMessage, m } from '@/i18n';
 import { SessionProvider, useSession } from '@/lib/session';
-import { font, space, useColors } from '@/theme';
+import { fonts, space, useColors, useIsDark } from '@/theme';
 
 SplashScreen.preventAutoHideAsync().catch(() => {});
 
+/** Headers in the wide display face, flat on the paper background (no shadow line). */
+export function useHeaderOptions() {
+  const colors = useColors();
+  return {
+    headerTitleStyle: { fontSize: 17, fontFamily: fonts.display, color: colors.text },
+    headerStyle: { backgroundColor: colors.background },
+    headerShadowVisible: false,
+    headerTintColor: colors.text,
+    headerBackButtonDisplayMode: 'minimal' as const,
+    contentStyle: { backgroundColor: colors.background },
+  };
+}
+
 export default function RootLayout() {
-  const colorScheme = useColorScheme();
+  const isDark = useIsDark();
+  const colors = useColors();
+  // Only the weights the app uses; the theme's `fonts` names these families.
+  const [fontsLoaded, fontError] = useFonts({
+    Unbounded_600SemiBold,
+    Unbounded_700Bold,
+    Newsreader_400Regular,
+    Newsreader_500Medium,
+    Newsreader_600SemiBold,
+  });
+  // Fall back to system fonts rather than staying on the splash screen if loading fails.
+  if (!fontsLoaded && !fontError) return null;
+
+  const base = isDark ? DarkTheme : DefaultTheme;
+  const theme = {
+    ...base,
+    colors: {
+      ...base.colors,
+      primary: colors.text,
+      background: colors.background,
+      card: colors.background,
+      text: colors.text,
+      border: colors.border,
+    },
+  };
   return (
-    <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
+    <ThemeProvider value={theme}>
       <SessionProvider>
         <RootNavigator />
       </SessionProvider>
@@ -25,7 +68,7 @@ export default function RootLayout() {
 // When a guard flips, expo-router moves to the first screen that is allowed.
 function RootNavigator() {
   const { status, profile, shop } = useSession();
-  const colors = useColors();
+  const headerOptions = useHeaderOptions();
 
   useEffect(() => {
     if (status !== 'loading') SplashScreen.hideAsync().catch(() => {});
@@ -41,11 +84,7 @@ function RootNavigator() {
   const ready = signedIn && !needsName && !!shop?.isActive;
 
   return (
-    <Stack
-      screenOptions={{
-        headerTitleStyle: { fontSize: font.large },
-        contentStyle: { backgroundColor: colors.background },
-      }}>
+    <Stack screenOptions={headerOptions}>
       <Stack.Protected guard={!signedIn}>
         <Stack.Screen name="login" options={{ headerShown: false }} />
         <Stack.Screen name="verify" options={{ title: '' }} />
@@ -87,6 +126,7 @@ function SessionError() {
 
   return (
     <View style={{ flex: 1, justifyContent: 'center', padding: space.xl, gap: space.lg, backgroundColor: colors.background }}>
+      <Grain />
       <Title>{m.app.name}</Title>
       <Body>{m.errors.network}</Body>
       {error ? <Notice tone="error">{error}</Notice> : null}

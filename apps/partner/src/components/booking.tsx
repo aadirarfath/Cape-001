@@ -3,7 +3,7 @@ import type { Enums } from '@cape001/db';
 import { StyleSheet, Text, View } from 'react-native';
 
 import { m } from '@/i18n';
-import { font, radius, space, useColors } from '@/theme';
+import { font, fonts, radius, space, useColors } from '@/theme';
 
 import { Body, Card, Muted } from './ui';
 
@@ -11,15 +11,16 @@ export type BookingStatus = Enums<'booking_status'>;
 
 export function StatusBadge({ status }: { status: BookingStatus }) {
   const colors = useColors();
-  const palette: Record<BookingStatus, { bg: string; fg: string }> = {
-    pending: { bg: colors.warningBg, fg: colors.warning },
-    confirmed: { bg: colors.infoBg, fg: colors.info },
-    completed: { bg: colors.successBg, fg: colors.success },
-    cancelled: { bg: colors.secondary, fg: colors.muted },
-    no_show: { bg: colors.errorBg, fg: colors.danger },
+  // Told apart by fill and outline: booked is solid ink, waiting is outlined, done is grey.
+  const palette: Record<BookingStatus, { bg: string; fg: string; border: string }> = {
+    pending: { bg: 'transparent', fg: colors.text, border: colors.ink },
+    confirmed: { bg: colors.primary, fg: colors.primaryText, border: colors.primary },
+    completed: { bg: colors.secondary, fg: colors.text, border: colors.secondary },
+    cancelled: { bg: 'transparent', fg: colors.muted, border: colors.border },
+    no_show: { bg: 'transparent', fg: colors.danger, border: colors.danger },
   };
   return (
-    <View style={[styles.badge, { backgroundColor: palette[status].bg }]}>
+    <View style={[styles.badge, { backgroundColor: palette[status].bg, borderColor: palette[status].border }]}>
       <Text style={[styles.badgeText, { color: palette[status].fg }]}>{m.status[status]}</Text>
     </View>
   );
@@ -73,10 +74,10 @@ export function BookingCard({
 }
 
 const styles = StyleSheet.create({
-  badge: { borderRadius: radius.pill, paddingHorizontal: space.md, paddingVertical: space.xs },
-  badgeText: { fontSize: font.small, fontWeight: '700' },
+  badge: { borderRadius: radius.pill, borderWidth: 1, paddingHorizontal: space.md, paddingVertical: space.xs + 1 },
+  badgeText: { fontSize: 12, fontFamily: fonts.display, letterSpacing: 0.6, textTransform: 'uppercase' },
   card: { flexDirection: 'row', alignItems: 'center', gap: space.lg },
   timeColumn: { width: 84 },
-  time: { fontSize: font.large, fontWeight: '700' },
+  time: { fontSize: font.large, fontFamily: fonts.displayBold, letterSpacing: -0.4 },
   small: { fontSize: font.small },
 });

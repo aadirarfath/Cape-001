@@ -7,9 +7,20 @@
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
+  --font-sans: var(--font-serif);
   --font-mono: var(--font-geist-mono);
-  --font-heading: var(--font-sans);
+  --font-heading: var(--font-serif);
+  --font-display: var(--font-archivo);
+  --font-serif: var(--font-newsreader);
+  /* Ragged Edge palette (see /raggeddesign.md) */
+  --color-ink: #181f1f;
+  --color-paper: #ffffff;
+  --color-fog: #d1d2d2;
+  --color-ash: #a3a5a5;
+  --color-graphite: #374151;
+  --color-mint: #eaf7f3;
+  --color-teal: #1f3233;
+  --color-iris: #516fea;
   --color-sidebar-ring: var(--sidebar-ring);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
@@ -49,30 +60,30 @@
 }
 
 :root {
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.145 0 0);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.145 0 0);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.145 0 0);
-  --primary: oklch(0.205 0 0);
-  --primary-foreground: oklch(0.985 0 0);
-  --secondary: oklch(0.97 0 0);
-  --secondary-foreground: oklch(0.205 0 0);
-  --muted: oklch(0.97 0 0);
-  --muted-foreground: oklch(0.556 0 0);
-  --accent: oklch(0.97 0 0);
-  --accent-foreground: oklch(0.205 0 0);
+  --background: #ffffff;
+  --foreground: #181f1f;
+  --card: #ffffff;
+  --card-foreground: #181f1f;
+  --popover: #ffffff;
+  --popover-foreground: #181f1f;
+  --primary: #181f1f;
+  --primary-foreground: #ffffff;
+  --secondary: #eaf7f3;
+  --secondary-foreground: #181f1f;
+  --muted: #eaf7f3;
+  --muted-foreground: #4b5563;
+  --accent: #eaf7f3;
+  --accent-foreground: #181f1f;
   --destructive: oklch(0.577 0.245 27.325);
-  --border: oklch(0.922 0 0);
-  --input: oklch(0.922 0 0);
-  --ring: oklch(0.708 0 0);
+  --border: #d1d2d2;
+  --input: #d1d2d2;
+  --ring: #516fea;
   --chart-1: oklch(0.87 0 0);
   --chart-2: oklch(0.556 0 0);
   --chart-3: oklch(0.439 0 0);
   --chart-4: oklch(0.371 0 0);
   --chart-5: oklch(0.269 0 0);
-  --radius: 0.625rem;
+  --radius: 1.25rem;
   --sidebar: oklch(0.985 0 0);
   --sidebar-foreground: oklch(0.145 0 0);
   --sidebar-primary: oklch(0.205 0 0);
@@ -126,5 +137,126 @@
   }
   html {
     @apply font-sans;
+    scroll-behavior: smooth;
+    font-kerning: normal;
+  }
+  h1,
+  h2,
+  h3 {
+    letter-spacing: -0.01em;
+  }
+}
+
+/* Expanded uppercase display face: the brand's "shout". Archivo at its widest width stands in
+   for ABCDiatypeExpanded. Never for running text. */
+@utility font-display {
+  font-family: var(--font-display);
+  font-stretch: 125%;
+  font-variation-settings: "wdth" 125;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: -0.02em;
+}
+
+/* The one chromatic moment: yellow -> pink -> cyan wash with transparent ends, drifting slowly. */
+@utility bg-solar-bloom {
+  background-image: linear-gradient(
+    0deg,
+    rgba(255, 194, 64, 0),
+    rgb(255, 194, 64) 25%,
+    rgb(255, 196, 244) 50%,
+    rgb(150, 235, 235) 75%,
+    rgba(150, 235, 235, 0) 100%
+  );
+  background-size: 100% 140%;
+  animation: bloom-drift 14s ease-in-out infinite alternate;
+}
+
+/* Film grain over the hero and dark panels: an inline SVG noise tile (CSP allows data: images). */
+@utility grain {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.55 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  background-size: 160px 160px;
+}
+
+@keyframes bloom-drift {
+  from {
+    background-position: 50% 0%;
+  }
+  to {
+    background-position: 50% 100%;
+  }
+}
+
+/* Wordmark letters rise into place once, on load. */
+@keyframes rise {
+  from {
+    transform: translateY(0.35em);
+    opacity: 0;
+  }
+  to {
+    transform: none;
+    opacity: 1;
+  }
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* As the hero scrolls away the wordmark recedes (browsers with scroll-driven animations). */
+@keyframes recede {
+  to {
+    transform: scale(0.82) translateY(-6vh);
+    opacity: 0;
+    filter: blur(6px);
+  }
+}
+
+@keyframes nudge {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(5px);
+  }
+}
+
+.hero-letter {
+  display: inline-block;
+  animation: rise 0.9s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+
+.hero-fade {
+  animation: fade-in 1.2s ease 0.7s both;
+}
+
+.scroll-nudge {
+  animation: nudge 1.8s ease-in-out infinite;
+}
+
+@supports (animation-timeline: view()) {
+  .hero-recede {
+    animation: recede linear both;
+    animation-timeline: view();
+    animation-range: exit 0% exit 90%;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .bg-solar-bloom,
+  .hero-letter,
+  .hero-fade,
+  .scroll-nudge,
+  .hero-recede {
+    animation: none !important;
+  }
+  html {
+    scroll-behavior: auto;
   }
 }

@@ -101,10 +101,12 @@ export function BookingFlow({ shop, services, barbers, barberServices, isLoggedI
         else next.set(key, value);
       }
       const url = `${pathname}?${next.toString()}`;
-      if (mode === "push") router.push(url, { scroll: false });
-      else router.replace(url, { scroll: false });
+      // Shallow update: the native history API changes the URL (and useSearchParams) without a
+      // server round trip. router.push would re-render the page on the server for every tap.
+      if (mode === "push") window.history.pushState(null, "", url);
+      else window.history.replaceState(null, "", url);
     },
-    [pathname, router, searchParams],
+    [pathname, searchParams],
   );
 
   // --- Free slots ----------------------------------------------------------------------------
