@@ -25,7 +25,7 @@ export default function PhotosScreen() {
         .order('sort_order')
         .order('created_at'),
     );
-  }, [shop.id]);
+  }, [shop.id], { cache: 'photos' });
 
   const [step, setStep] = useState<Step>(null);
   const [error, setError] = useState<string | null>(null);
@@ -56,14 +56,19 @@ export default function PhotosScreen() {
 
   async function remove() {
     if (!toDelete) return;
+    // Optimistic: hide the photo and close the dialog now; bring both back if the delete fails.
+    const target = toDelete;
+    const previous = photos.data;
     setDeleting(true);
     setDeleteError(null);
+    setToDelete(null);
+    photos.mutate((current) => current?.filter((p) => p.id !== target.id));
     try {
-      await deleteShopPhoto(toDelete);
-      setToDelete(null);
-      await photos.reload();
+      await deleteShopPhoto(target);
     } catch (e) {
+      photos.mutate(() => previous);
       setDeleteError(errorMessage(e as { message?: string }));
+      setToDelete(target);
     } finally {
       setDeleting(false);
     }

@@ -5,6 +5,7 @@ import { createContext, type ReactNode, useCallback, useContext, useEffect, useM
 import { AppState } from 'react-native';
 
 import { supabase } from './supabase';
+import { clearLoadCache } from './use-load';
 
 // Who is logged in, which shops they belong to and which one they are working in. Drives the
 // route guards in app/_layout.tsx:
@@ -153,6 +154,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
     const { data } = supabase.auth.onAuthStateChange((_event, nextSession) => {
       setSession(nextSession);
       if (!nextSession) {
+        clearLoadCache(); // another user may sign in on this phone next
         setProfile(null);
         setShops([]);
         setSelectedId(null);

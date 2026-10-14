@@ -119,15 +119,18 @@ function BarberForm({
     setMessage(null);
     try {
       let barberId = barber?.id;
+      const setServices = (id: string) =>
+        supabase.rpc('set_barber_services', { p_barber_id: id, p_service_ids: [...serviceIds] }).then(unwrap);
       if (barberId) {
-        unwrap(await supabase.from('barbers').update(parsed.data).eq('id', barberId));
+        // Independent writes: send them together instead of one after the other.
+        await Promise.all([supabase.from('barbers').update(parsed.data).eq('id', barberId).then(unwrap), setServices(barberId)]);
       } else {
         const created = unwrap(
           await supabase.from('barbers').insert({ ...parsed.data, shop_id: shop.id }).select('id').single(),
         );
         barberId = created.id;
+        await setServices(barberId);
       }
-      unwrap(await supabase.rpc('set_barber_services', { p_barber_id: barberId, p_service_ids: [...serviceIds] }));
 
       if (isNew) {
         // Open the saved barber so hours, time off and the app login can be set up next.
@@ -139,7 +142,7 @@ function BarberForm({
           ? { tone: 'warning', text: t.noServicesSelected }
           : { tone: 'success', text: m.common.saved },
       );
-      await reload();
+      reload(); // in the background; the form already shows what was saved
     } catch (e) {
       setMessage({ tone: 'error', text: errorMessage(e as { message?: string }) });
     } finally {
@@ -172,7 +175,7 @@ function BarberForm({
       tone: 'success',
       text: remove ? t.inviteRemoved : format(t.inviteSaved, { name: barber.display_name }),
     });
-    await reload();
+    reload();
   }
 
   return (

@@ -86,7 +86,7 @@ function BookingList({
         <li key={booking.id}>
           <Link
             href={`/bookings/${booking.id}`}
-            className="flex items-center gap-3 rounded-xl border p-4 transition-colors hover:bg-muted/50"
+            className="flex items-center gap-3 rounded-xl border p-4 transition-colors hover:bg-muted/50 active:bg-muted"
             aria-label={`${m.bookings.details}: ${booking.shop?.name ?? ""}`}
           >
             <div className="min-w-0 flex-1 space-y-1">

@@ -73,7 +73,7 @@ export default function TimeOffScreen() {
         .order('starts_at'),
     ]);
     return { name: unwrap(barber).display_name, rows: unwrap(rows) };
-  }, [barberId]);
+  }, [barberId], { cache: 'time-off' });
 
   const [adding, setAdding] = useState(false);
   const [wholeDays, setWholeDays] = useState(true);
@@ -103,7 +103,11 @@ export default function TimeOffScreen() {
     }
     setFormError(null);
     setSaving(true);
-    const { error } = await supabase.from('time_off').insert(parsed.data);
+    const { data: row, error } = await supabase
+      .from('time_off')
+      .insert(parsed.data)
+      .select('id, starts_at, ends_at, reason')
+      .single();
     setSaving(false);
     if (error) {
       setFormError(errorMessage(error));
@@ -112,20 +116,31 @@ export default function TimeOffScreen() {
     setAdding(false);
     setReason('');
     setSaved(true);
-    await data.reload();
+    // Show the new entry straight away instead of waiting for a reload.
+    data.mutate((current) =>
+      current && { ...current, rows: [...current.rows, row].sort((a, b) => a.starts_at.localeCompare(b.starts_at)) },
+    );
   }
 
   async function remove(id: string) {
+    // Optimistic: drop the entry and close the dialog now; put it back if the delete fails.
+    const removed = data.data?.rows.find((row) => row.id === id);
     setDeleting(id);
     setDeleteError(null);
+    setConfirmDelete(null);
+    data.mutate((current) => current && { ...current, rows: current.rows.filter((row) => row.id !== id) });
     const { error } = await supabase.from('time_off').delete().eq('id', id);
     setDeleting(null);
     if (error) {
+      if (removed) {
+        data.mutate(
+          (current) =>
+            current && { ...current, rows: [...current.rows, removed].sort((a, b) => a.starts_at.localeCompare(b.starts_at)) },
+        );
+      }
       setDeleteError(errorMessage(error));
-      return;
+      setConfirmDelete(id);
     }
-    setConfirmDelete(null);
-    await data.reload();
   }
 
   return (

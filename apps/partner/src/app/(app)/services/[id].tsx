@@ -122,31 +122,36 @@ function ServiceForm({
     setSaving(true);
     setMessage(null);
     try {
-      const serviceId = service
-        ? (unwrap(await supabase.from('services').update(parsed.data).eq('id', service.id)), service.id)
-        : unwrap(await supabase.from('services').insert({ ...parsed.data, shop_id: shop.id }).select('id').single()).id;
+      const serviceId =
+        service?.id ??
+        unwrap(await supabase.from('services').insert({ ...parsed.data, shop_id: shop.id }).select('id').single()).id;
 
-      // Which barbers offer it: add the ticked ones, remove the unticked ones.
+      // The service update and which barbers offer it (add the ticked ones, remove the unticked
+      // ones) are independent writes, so they are sent together.
       const wanted = [...barberIds];
-      if (wanted.length > 0) {
-        unwrap(
-          await supabase.from('barber_services').upsert(
-            wanted.map((barber_id) => ({ barber_id, service_id: serviceId, shop_id: shop.id })),
-            { onConflict: 'barber_id,service_id', ignoreDuplicates: true },
-          ),
-        );
-      }
       const unwanted = barbers.map((b) => b.id).filter((barberId) => !barberIds.has(barberId));
-      if (unwanted.length > 0) {
-        unwrap(await supabase.from('barber_services').delete().eq('service_id', serviceId).in('barber_id', unwanted));
-      }
+      await Promise.all([
+        service ? supabase.from('services').update(parsed.data).eq('id', service.id).then(unwrap) : null,
+        wanted.length > 0
+          ? supabase
+              .from('barber_services')
+              .upsert(
+                wanted.map((barber_id) => ({ barber_id, service_id: serviceId, shop_id: shop.id })),
+                { onConflict: 'barber_id,service_id', ignoreDuplicates: true },
+              )
+              .then(unwrap)
+          : null,
+        unwanted.length > 0
+          ? supabase.from('barber_services').delete().eq('service_id', serviceId).in('barber_id', unwanted).then(unwrap)
+          : null,
+      ]);
 
       if (isNew) {
         router.back();
         return;
       }
       setMessage({ tone: 'success', text: m.common.saved });
-      await reload();
+      reload(); // in the background; the form already shows what was saved
     } catch (e) {
       setMessage({ tone: 'error', text: errorMessage(e as { message?: string }) });
     } finally {

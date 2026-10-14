@@ -10,7 +10,7 @@
 
 do $$
 declare
-  owner_phone constant text := '+91 99999 99999';
+  owner_phone constant text := '+91 98470 12345';
   owner_id uuid;
   edappally constant uuid := 'c0000000-0000-4000-8000-000000000001';
   kakkanad constant uuid := 'c0000000-0000-4000-8000-000000000002';
@@ -81,7 +81,7 @@ begin
   -- Services (prices in paise) ---------------------------------------------------------------
 
   insert into public.services (shop_id, name, duration_minutes, price_paise, sort_order)
-  values
+  valuesp
     (edappally, 'Haircut', 30, 30000, 1),
     (edappally, 'Beard Trim', 15, 15000, 2),
     (edappally, 'Haircut + Beard', 45, 40000, 3),

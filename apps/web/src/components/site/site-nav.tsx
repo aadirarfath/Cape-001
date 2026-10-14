@@ -66,8 +66,8 @@ export function SiteNav() {
             className={cn(
               "grid size-10 place-items-center rounded-full border transition-colors",
               solid
-                ? "border-ink/80 bg-paper text-ink hover:bg-ink hover:text-paper"
-                : "border-paper/70 bg-transparent text-paper backdrop-blur-sm hover:bg-paper hover:text-ink",
+                ? "border-ink/80 bg-paper text-ink hover:bg-ink hover:text-paper active:bg-ink active:text-paper"
+                : "border-paper/70 bg-transparent text-paper backdrop-blur-sm hover:bg-paper hover:text-ink active:bg-paper active:text-ink",
             )}
           >
             <User className="size-4" aria-hidden />
@@ -77,7 +77,7 @@ export function SiteNav() {
             className={cn(
               "group font-display flex h-10 items-center gap-2 rounded-full pl-5 pr-4 text-xs tracking-[0.04em] transition-colors",
               // White over the dark hero video, ink once the bar is solid.
-              solid ? "bg-ink text-paper hover:bg-teal" : "bg-paper text-ink hover:bg-mint",
+              solid ? "bg-ink text-paper hover:bg-teal active:bg-teal" : "bg-paper text-ink hover:bg-mint active:bg-mint",
             )}
           >
             <span className="sm:hidden">{m.site.nav.bookShort}</span>

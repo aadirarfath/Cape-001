@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { type MouseEvent, useState } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { KERALA_DISTRICTS, findDistrict } from "@cape001/core";
@@ -24,6 +24,14 @@ export function LocationPicker() {
   // The open district lives in the URL (?district=), so Back and the results page's "Change"
   // link return to its zones. Plain links, so they work even before the page has hydrated.
   const district = findDistrict(searchParams.get("district"));
+
+  // Once hydrated, opening or closing a district is a shallow URL change: the zones are already
+  // here, so there is no need to re-render the page on the server for every tap.
+  function shallow(event: MouseEvent<HTMLAnchorElement>) {
+    if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey || event.button !== 0) return;
+    event.preventDefault();
+    window.history.pushState(null, "", event.currentTarget.href);
+  }
 
   function useMyLocation() {
     if (!("geolocation" in navigator)) {
@@ -68,7 +76,7 @@ export function LocationPicker() {
             <h3 id="pick-zone" className="font-display text-xs tracking-[0.08em] text-graphite">
               {format(m.home.pickZone, { district: district.name })}
             </h3>
-            <Link href="/" scroll={false} className={buttonVariants({ variant: "ghost", size: "sm" })}>
+            <Link href="/" scroll={false} onClick={shallow} className={buttonVariants({ variant: "ghost", size: "sm" })}>
               <ChevronLeft aria-hidden />
               {m.home.allDistricts}
             </Link>
@@ -78,7 +86,7 @@ export function LocationPicker() {
               <li key={zone.id} className={wide(zone.name)}>
                 <Link
                   href={`/shops?district=${district.id}&zone=${zone.id}`}
-                  className="group flex h-12 items-center gap-2 rounded-full border border-ink/15 px-4 text-[15px] transition-colors hover:border-ink hover:bg-ink hover:text-paper"
+                  className="group flex h-12 items-center gap-2 rounded-full border border-ink/15 px-4 text-[15px] transition-colors hover:border-ink hover:bg-ink hover:text-paper active:border-ink active:bg-ink active:text-paper"
                 >
                   <MapPin className="hidden size-4 shrink-0 opacity-50 group-hover:opacity-100 sm:block" aria-hidden />
                   <span className="truncate">{zone.name}</span>
@@ -98,7 +106,8 @@ export function LocationPicker() {
                 <Link
                   href={`/?district=${d.id}`}
                   scroll={false}
-                  className="group flex h-12 items-center gap-2 rounded-full border border-ink/15 px-4 text-[15px] transition-colors hover:border-ink hover:bg-ink hover:text-paper justify-between"
+                  onClick={shallow}
+                  className="group flex h-12 items-center gap-2 rounded-full border border-ink/15 px-4 text-[15px] transition-colors hover:border-ink hover:bg-ink hover:text-paper active:border-ink active:bg-ink active:text-paper justify-between"
                 >
                   <span className="truncate">{d.name}</span>
                   <ChevronRight className="hidden size-4 shrink-0 opacity-50 transition-transform sm:block group-hover:translate-x-0.5 group-hover:opacity-100" aria-hidden />

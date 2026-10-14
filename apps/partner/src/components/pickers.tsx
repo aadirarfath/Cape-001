@@ -2,12 +2,12 @@ import { APP_TIME_ZONE, formatLocalDate, formatWallClockTime, localDateOf } from
 import Ionicons from '@expo/vector-icons/Ionicons';
 import DateTimePicker, { DateTimePickerAndroid } from '@react-native-community/datetimepicker';
 import { useState } from 'react';
-import { Modal, Platform, Pressable, StyleSheet, View } from 'react-native';
+import { Modal, Platform, StyleSheet, View } from 'react-native';
 
 import { m } from '@/i18n';
 import { font, radius, space, touchHeight, useColors } from '@/theme';
 
-import { Body, Button, Label } from './ui';
+import { Body, Button, Label, Tap } from './ui';
 
 // Big buttons that open the phone's own date / time picker. Dates are calendar dates in India
 // Standard Time ("YYYY-MM-DD"); times are wall-clock "HH:MM" (24-hour) — the formats the
@@ -39,7 +39,7 @@ function PickerButton({
   return (
     <View style={{ gap: space.sm, flex: 1 }}>
       {label ? <Label>{label}</Label> : null}
-      <Pressable
+      <Tap
         onPress={onPress}
         accessibilityRole="button"
         accessibilityLabel={label ? `${label}: ${text}` : text}
@@ -50,7 +50,7 @@ function PickerButton({
         ]}>
         <Ionicons name={icon} size={22} color={colors.muted} />
         <Body style={{ fontSize: font.large }}>{text}</Body>
-      </Pressable>
+      </Tap>
     </View>
   );
 }

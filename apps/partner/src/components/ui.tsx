@@ -1,4 +1,5 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
+import * as Haptics from 'expo-haptics';
 import type { ComponentProps, ReactNode } from 'react';
 import {
   ActivityIndicator,
@@ -7,6 +8,7 @@ import {
   Modal,
   Platform,
   Pressable,
+  type PressableProps,
   RefreshControl,
   ScrollView,
   StyleSheet,
@@ -28,13 +30,18 @@ export type IconName = ComponentProps<typeof Ionicons>['name'];
 
 // Texture ----------------------------------------------------------------------------------------
 
-/** Film grain over the whole parent. Purely decorative; never intercepts touches. */
+/**
+ * Film grain over the whole parent. Purely decorative; never intercepts touches. It never changes,
+ * so it is rasterised once into a GPU texture instead of re-tiling the image on every frame.
+ */
 export function Grain({ tone, opacity = 1 }: { tone?: 'onLight' | 'onDark'; opacity?: number }) {
   const isDark = useIsDark();
   const onDark = tone ? tone === 'onDark' : isDark;
   return (
     <View
       style={[StyleSheet.absoluteFill, { pointerEvents: 'none' }]}
+      renderToHardwareTextureAndroid
+      shouldRasterizeIOS
       accessible={false}
       importantForAccessibility="no-hide-descendants">
       <Image
@@ -62,6 +69,30 @@ export function Wordmark({ size = 34, color, subtitle }: { size?: number; color?
         <Text style={[styles.eyebrow, { color: tint, opacity: 0.7, marginTop: space.xs }]}>{subtitle}</Text>
       ) : null}
     </View>
+  );
+}
+
+// Touch ------------------------------------------------------------------------------------------
+
+const RIPPLE = { color: 'rgba(128, 128, 128, 0.28)' } as const;
+
+/**
+ * Pressable with instant feedback: a native ripple on Android (drawn by the OS, so it never waits
+ * for JavaScript) and a light haptic tick when the press lands. Use it for every tappable element.
+ */
+export function Tap({ onPress, android_ripple, haptic = true, ...props }: PressableProps & { haptic?: boolean }) {
+  return (
+    <Pressable
+      android_ripple={android_ripple ?? RIPPLE}
+      onPress={
+        onPress &&
+        ((event) => {
+          if (haptic) Haptics.selectionAsync().catch(() => {});
+          onPress(event);
+        })
+      }
+      {...props}
+    />
   );
 }
 
@@ -122,12 +153,12 @@ export function Card({ children, onPress, style }: { children: ReactNode; onPres
   const cardStyle = [styles.card, { backgroundColor: colors.card, borderColor: colors.border }, style];
   if (!onPress) return <View style={cardStyle}>{children}</View>;
   return (
-    <Pressable
+    <Tap
       onPress={onPress}
       accessibilityRole="button"
       style={({ pressed }) => [cardStyle, pressed && { borderColor: colors.ink, transform: [{ scale: 0.99 }] }]}>
       {children}
-    </Pressable>
+    </Tap>
   );
 }
 
@@ -190,7 +221,7 @@ export function Button({
   }[variant];
   const inactive = disabled || loading;
   return (
-    <Pressable
+    <Tap
       onPress={onPress}
       disabled={inactive}
       accessibilityRole="button"
@@ -211,7 +242,7 @@ export function Button({
       <Text style={[styles.buttonText, { color: palette.fg }]} numberOfLines={2}>
         {label}
       </Text>
-    </Pressable>
+    </Tap>
   );
 }
 
@@ -306,7 +337,7 @@ export function SwitchRow({
 }) {
   const colors = useColors();
   return (
-    <Pressable
+    <Tap
       onPress={() => !disabled && onValueChange(!value)}
       accessibilityRole="switch"
       accessibilityState={{ checked: value, disabled }}
@@ -324,7 +355,7 @@ export function SwitchRow({
         thumbColor={Platform.OS === 'android' ? colors.card : undefined}
         ios_backgroundColor={colors.border}
       />
-    </Pressable>
+    </Tap>
   );
 }
 
@@ -342,7 +373,7 @@ export function CheckRow({
 }) {
   const colors = useColors();
   return (
-    <Pressable
+    <Tap
       onPress={onToggle}
       accessibilityRole="checkbox"
       accessibilityState={{ checked }}
@@ -357,14 +388,14 @@ export function CheckRow({
         <Body>{label}</Body>
         {subtitle ? <Muted style={styles.small}>{subtitle}</Muted> : null}
       </View>
-    </Pressable>
+    </Tap>
   );
 }
 
 export function Chip({ label, selected, onPress }: { label: string; selected: boolean; onPress: () => void }) {
   const colors = useColors();
   return (
-    <Pressable
+    <Tap
       onPress={onPress}
       accessibilityRole="radio"
       accessibilityState={{ selected }}
@@ -377,7 +408,7 @@ export function Chip({ label, selected, onPress }: { label: string; selected: bo
         pressed && { opacity: 0.7 },
       ]}>
       <Text style={[styles.chipText, { color: selected ? colors.primaryText : colors.text }]}>{label}</Text>
-    </Pressable>
+    </Tap>
   );
 }
 

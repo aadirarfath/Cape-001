@@ -10,9 +10,9 @@ export default function Home() {
 
   return (
     <main className="flex-1">
-      {/* Hero: full-bleed video (the gradient shows while it loads); the wordmark is the only content. */}
+      {/* Hero: full-bleed video (a still poster shows until it loads); the wordmark is the only content. */}
       <section className="bg-solar-bloom relative grid min-h-svh place-items-center overflow-hidden bg-ink px-3">
-        <HeroVideo src="/hero.mp4" />
+        <HeroVideo src="/hero.mp4" poster="/hero-poster.jpg" />
         {/* A soft scrim keeps the white type readable over any frame, plus film grain. */}
         <div className="pointer-events-none absolute inset-0 bg-ink/20" aria-hidden />
         <div className="grain pointer-events-none absolute inset-0 opacity-25 mix-blend-soft-light" aria-hidden />

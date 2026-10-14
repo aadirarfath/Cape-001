@@ -24,7 +24,7 @@ export default function BarbersScreen() {
     ]);
     const invitePhone = new Map(unwrap(invites).map((i) => [i.barber_id, i.phone]));
     return unwrap(rows).map((b) => ({ ...b, invitePhone: invitePhone.get(b.id) ?? null }));
-  }, [shop.id]);
+  }, [shop.id], { cache: 'barbers' });
 
   if (barbers.loading && !barbers.data) return <LoadingView />;
 

@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState, useTransition } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, useTransition } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import {
   bookableDates,
@@ -46,6 +46,10 @@ type SlotsState =
   | { status: "ready"; slots: Slot[] };
 
 const ANY = "any";
+/** How long fetched slots count as current. */
+const SLOTS_FRESH_MS = 60_000;
+/** Days whose slots are fetched ahead while the customer picks a date. */
+const PREFETCH_DAYS = 3;
 
 /** Booking errors that mean "pick a different time": send the customer back to the slot list. */
 const PICK_ANOTHER_TIME: readonly DbErrorCode[] = [
@@ -126,29 +130,58 @@ export function BookingFlow({ shop, services, barbers, barberServices, isLoggedI
         ? { status: "ready", slots: slotsResult.slots }
         : { status: "error" };
 
+  // Slot requests, shared between prefetching and showing. Kept for a minute: long enough for the
+  // customer to pick a date, short enough that the slots shown are current.
+  const slotRequests = useRef(new Map<string, { at: number; promise: Promise<Slot[] | null> }>());
+
+  const requestSlots = useCallback(
+    (forServiceId: string, forBarberId: string, forDate: string, version: number) => {
+      const key = `${forServiceId}|${forBarberId}|${forDate}|${version}`;
+      const cached = slotRequests.current.get(key);
+      if (cached && Date.now() - cached.at < SLOTS_FRESH_MS) return cached.promise;
+
+      const supabase = createClient();
+      const promise = Promise.resolve(
+        forBarberId === ANY
+          ? supabase.rpc(
+              "get_available_slots_any",
+              getAvailableSlotsAnyInputSchema.parse({ p_shop_id: shop.id, p_service_id: forServiceId, p_date: forDate }),
+            )
+          : supabase.rpc(
+              "get_available_slots",
+              getAvailableSlotsInputSchema.parse({ p_barber_id: forBarberId, p_service_id: forServiceId, p_date: forDate }),
+            ),
+      ).then(
+        ({ data, error }) => (error ? null : data),
+        () => null,
+      );
+      slotRequests.current.set(key, { at: Date.now(), promise });
+      // A failed request is not kept, so Retry (or coming back) asks again.
+      promise.then((slots) => {
+        if (slots === null) slotRequests.current.delete(key);
+      });
+      return promise;
+    },
+    [shop.id],
+  );
+
   useEffect(() => {
     if (!slotsKey || !serviceId || !barberId || !date) return;
     let cancelled = false;
-
-    const supabase = createClient();
-    const request =
-      barberId === ANY
-        ? supabase.rpc(
-            "get_available_slots_any",
-            getAvailableSlotsAnyInputSchema.parse({ p_shop_id: shop.id, p_service_id: serviceId, p_date: date }),
-          )
-        : supabase.rpc(
-            "get_available_slots",
-            getAvailableSlotsInputSchema.parse({ p_barber_id: barberId, p_service_id: serviceId, p_date: date }),
-          );
-
-    request.then(({ data, error }) => {
-      if (!cancelled) setSlotsResult({ key: slotsKey, slots: error ? null : data });
+    requestSlots(serviceId, barberId, date, slotsVersion).then((slots) => {
+      if (!cancelled) setSlotsResult({ key: slotsKey, slots });
     });
     return () => {
       cancelled = true;
     };
-  }, [shop.id, serviceId, barberId, date, slotsKey]);
+  }, [serviceId, barberId, date, slotsKey, slotsVersion, requestSlots]);
+
+  // While the customer is choosing a date, fetch the first few days' slots in the background so
+  // the slot list appears the moment they tap one.
+  useEffect(() => {
+    if (!serviceId || !barberId || date) return;
+    for (const d of dates.slice(0, PREFETCH_DAYS)) requestSlots(serviceId, barberId, d, slotsVersion);
+  }, [serviceId, barberId, date, dates, slotsVersion, requestSlots]);
 
   // --- Confirm -------------------------------------------------------------------------------
   const [notes, setNotes] = useState("");
@@ -313,7 +346,7 @@ export function BookingFlow({ shop, services, barbers, barberServices, isLoggedI
                     setNotice(null);
                     setParams({ date: d });
                   }}
-                  className="flex h-16 w-full flex-col items-center justify-center rounded-lg border text-sm transition-colors hover:bg-muted"
+                  className="flex h-16 w-full flex-col items-center justify-center rounded-lg border text-sm transition-colors hover:bg-muted active:bg-muted"
                 >
                   <span className="text-xs text-muted-foreground">
                     {index === 0
@@ -424,7 +457,7 @@ function ChoiceButton({ onClick, children }: { onClick: () => void; children: Re
     <button
       type="button"
       onClick={onClick}
-      className="flex min-h-14 w-full items-center gap-3 rounded-xl border p-3 text-left transition-colors hover:bg-muted/50"
+      className="flex min-h-14 w-full items-center gap-3 rounded-xl border p-3 text-left transition-colors hover:bg-muted/50 active:bg-muted"
     >
       {children}
     </button>
@@ -510,7 +543,7 @@ function SlotGrid({
                 <button
                   type="button"
                   onClick={() => onPick(slot)}
-                  className="h-11 w-full rounded-lg border text-sm font-medium transition-colors hover:bg-muted"
+                  className="h-11 w-full rounded-lg border text-sm font-medium transition-colors hover:bg-muted active:bg-muted"
                 >
                   {formatInAppTimeZone(slot.starts_at, { hour: "numeric", minute: "2-digit" }, locale)}
                 </button>

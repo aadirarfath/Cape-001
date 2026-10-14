@@ -2,11 +2,11 @@ import { addDaysToLocalDate, formatLocalDate, localDayBounds, todayInAppTimeZone
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { router } from 'expo-router';
 import { useEffect, useMemo, useState } from 'react';
-import { Pressable, StyleSheet, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 
 import { BookingCard, type BookingListItem } from '@/components/booking';
 import { DateButton } from '@/components/pickers';
-import { Button, Chip, ChipRow, EmptyState, LoadingView, Muted, Notice, Screen } from '@/components/ui';
+import { Button, Chip, ChipRow, EmptyState, LoadingView, Muted, Notice, Screen, Tap } from '@/components/ui';
 import { errorMessage, format, m } from '@/i18n';
 import { useSession, useShop } from '@/lib/session';
 import { supabase } from '@/lib/supabase';
@@ -41,7 +41,7 @@ export default function ScheduleScreen() {
         .order('sort_order')
         .order('display_name'),
     );
-  }, [shop.id, isManager]);
+  }, [shop.id, isManager], { cache: 'schedule-barbers' });
 
   const bookings = useLoad(async (): Promise<BookingListItem[]> => {
     if (!isManager && !ownBarberId) return [];
@@ -67,7 +67,7 @@ export default function ScheduleScreen() {
       serviceName: row.service?.name ?? '',
       barberName: row.barber?.display_name ?? '',
     }));
-  }, [shop.id, date, isManager, ownBarberId]);
+  }, [shop.id, date, isManager, ownBarberId], { cache: 'schedule' });
 
   // New, changed and cancelled bookings arrive through Realtime; RLS decides which rows this
   // user receives. Any change reloads the day so customer names come through RLS as well.
@@ -109,23 +109,23 @@ export default function ScheduleScreen() {
   return (
     <Screen onRefresh={bookings.refresh} refreshing={bookings.refreshing}>
       <View style={styles.dateRow}>
-        <Pressable
+        <Tap
           onPress={() => setDate(addDaysToLocalDate(date, -1))}
           accessibilityRole="button"
           accessibilityLabel={m.schedule.previousDay}
           style={({ pressed }) => [styles.arrow, { borderColor: colors.border, backgroundColor: colors.card }, pressed && { opacity: 0.6 }]}>
           <Ionicons name="chevron-back" size={30} color={colors.text} />
-        </Pressable>
+        </Tap>
         <View style={{ flex: 1 }}>
           <DateButton value={date} onChange={setDate} />
         </View>
-        <Pressable
+        <Tap
           onPress={() => setDate(addDaysToLocalDate(date, 1))}
           accessibilityRole="button"
           accessibilityLabel={m.schedule.nextDay}
           style={({ pressed }) => [styles.arrow, { borderColor: colors.border, backgroundColor: colors.card }, pressed && { opacity: 0.6 }]}>
           <Ionicons name="chevron-forward" size={30} color={colors.text} />
-        </Pressable>
+        </Tap>
       </View>
 
       <View style={styles.summaryRow}>

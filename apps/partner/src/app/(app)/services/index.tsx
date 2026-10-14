@@ -21,7 +21,7 @@ export default function ServicesScreen() {
         .order('sort_order')
         .order('name'),
     );
-  }, [shop.id]);
+  }, [shop.id], { cache: 'services' });
 
   if (services.loading && !services.data) return <LoadingView />;
 

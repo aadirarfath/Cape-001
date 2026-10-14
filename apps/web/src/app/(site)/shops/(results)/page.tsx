@@ -110,7 +110,7 @@ export default async function ShopsPage({ searchParams }: { searchParams: Search
                 <li key={shop.id}>
                   <Link
                     href={`/shops/${shop.slug}`}
-                    className="flex items-center gap-3 rounded-xl border p-4 transition-colors hover:bg-muted/50"
+                    className="flex items-center gap-3 rounded-xl border p-4 transition-colors hover:bg-muted/50 active:bg-muted"
                   >
                     <div className="min-w-0 flex-1 space-y-1">
                       <h2 className="truncate font-semibold">{shop.name}</h2>

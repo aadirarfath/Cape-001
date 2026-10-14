@@ -43,7 +43,7 @@ export default function BookingScreen() {
         .eq('id', id)
         .maybeSingle(),
     );
-  }, [id]);
+  }, [id], { cache: 'booking' });
 
   if (booking.loading && !booking.data) return <LoadingView />;
   const b = booking.data;
@@ -62,36 +62,53 @@ export default function BookingScreen() {
   const started = new Date(b.starts_at) <= new Date();
   const phone = b.customer?.phone ?? null;
 
+  // Status changes are optimistic: the screen shows the new status at once, then takes the row
+  // the database function returns (no reload), or rolls back and shows the error.
+  type Row = NonNullable<typeof b>;
+  const applyRow = (row: Pick<Row, 'status' | 'cancellation_reason'>) =>
+    booking.mutate((current) => current && { ...current, status: row.status, cancellation_reason: row.cancellation_reason });
+
   async function setStatus(status: BookingStatus) {
+    const previous = b!;
     setBusy(status);
     setError(null);
-    const { error: updateError } = await supabase.rpc('update_booking_status', { p_booking_id: b!.id, p_status: status });
+    applyRow({ status, cancellation_reason: previous.cancellation_reason });
+    const { data: row, error: updateError } = await supabase.rpc('update_booking_status', { p_booking_id: previous.id, p_status: status });
     setBusy(null);
     if (updateError) {
+      applyRow(previous);
       setError(errorMessage(updateError));
       return false;
     }
-    await booking.reload();
+    applyRow(row);
     return true;
   }
 
-  async function confirmNoShow() {
-    if (await setStatus('no_show')) setDialog(null);
+  function confirmNoShow() {
+    setDialog(null);
+    setStatus('no_show').then((ok) => {
+      if (!ok) setDialog('no_show');
+    });
   }
 
   async function cancel() {
-    const input = cancelBookingInputSchema.parse({ p_booking_id: b!.id, p_reason: reason.trim() || undefined });
+    const previous = b!;
+    const trimmed = reason.trim() || undefined;
+    const input = cancelBookingInputSchema.parse({ p_booking_id: previous.id, p_reason: trimmed });
     setBusy('cancel');
     setDialogError(null);
-    const { error: cancelError } = await supabase.rpc('cancel_booking', input);
+    setDialog(null);
+    applyRow({ status: 'cancelled', cancellation_reason: trimmed ?? null });
+    const { data: row, error: cancelError } = await supabase.rpc('cancel_booking', input);
     setBusy(null);
     if (cancelError) {
+      applyRow(previous);
       setDialogError(errorMessage(cancelError));
+      setDialog('cancel');
       return;
     }
-    setDialog(null);
     setReason('');
-    await booking.reload();
+    applyRow(row);
   }
 
   const active = b.status === 'pending' || b.status === 'confirmed';
@@ -134,19 +151,19 @@ export default function BookingScreen() {
       {/* Actions allowed by update_booking_status: pending -> confirmed; confirmed -> completed /
           no_show once the appointment has started. Cancelling is for owners and managers. */}
       {b.status === 'pending' ? (
-        <Button label={t.confirm} icon="checkmark" loading={busy === 'confirmed'} onPress={() => setStatus('confirmed')} />
+        <Button label={t.confirm} icon="checkmark" loading={busy === 'confirmed'} disabled={busy !== null} onPress={() => setStatus('confirmed')} />
       ) : null}
       {b.status === 'confirmed' && started ? (
         <>
-          <Button label={t.complete} icon="checkmark-done" loading={busy === 'completed'} onPress={() => setStatus('completed')} />
-          <Button label={t.noShow} icon="person-remove" variant="secondary" onPress={() => setDialog('no_show')} />
+          <Button label={t.complete} icon="checkmark-done" loading={busy === 'completed'} disabled={busy !== null} onPress={() => setStatus('completed')} />
+          <Button label={t.noShow} icon="person-remove" variant="secondary" disabled={busy !== null} onPress={() => setDialog('no_show')} />
         </>
       ) : null}
       {b.status === 'confirmed' && !started ? (
         <Notice>{format(t.waitUntilStart, { time: formatTime(b.starts_at) })}</Notice>
       ) : null}
       {isManager && active ? (
-        <Button label={t.cancel} icon="close-circle" variant="danger" onPress={() => setDialog('cancel')} />
+        <Button label={t.cancel} icon="close-circle" variant="danger" disabled={busy !== null} onPress={() => setDialog('cancel')} />
       ) : null}
 
       <ConfirmDialog

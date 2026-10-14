@@ -18,7 +18,7 @@ export function SiteFooter() {
             <Link
               key={link.href}
               href={link.href}
-              className="inline-flex h-11 items-center rounded-full border border-paper/25 px-5 transition-colors hover:border-paper hover:bg-paper hover:text-ink"
+              className="inline-flex h-11 items-center rounded-full border border-paper/25 px-5 transition-colors hover:border-paper hover:bg-paper hover:text-ink active:border-paper active:bg-paper active:text-ink"
             >
               {link.label}
             </Link>
