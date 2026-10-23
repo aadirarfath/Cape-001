@@ -103,11 +103,6 @@ interface SessionData {
 }
 
 async function fetchSessionData(userId: string): Promise<SessionData> {
-  // Link any barber invites for this phone first, so a newly invited barber goes straight
-  // into their shop instead of "Create your shop". Failure here must not block login.
-  const { error: claimError } = await supabase.rpc('claim_barber_invites');
-  if (claimError) console.warn('claim_barber_invites failed', claimError.message);
-
   const [profile, shops, rememberedId] = await Promise.all([
     loadProfile(userId),
     loadShops(),

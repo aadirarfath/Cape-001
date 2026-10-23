@@ -1,4 +1,3 @@
-import { pushTokenInputSchema } from '@cape001/core';
 import Constants, { ExecutionEnvironment } from 'expo-constants';
 import * as Device from 'expo-device';
 import * as SecureStore from 'expo-secure-store';
@@ -73,8 +72,7 @@ export async function registerForPush({ ask }: { ask: boolean }): Promise<PushSt
   if (status !== 'granted') return status === 'denied' ? 'denied' : 'undetermined';
 
   const { data: token } = await Notifications.getExpoPushTokenAsync({ projectId: projectId() });
-  const row = pushTokenInputSchema.parse({ token, platform: Platform.OS });
-  const { error } = await supabase.from('push_tokens').upsert(row, { onConflict: 'user_id,token' });
+  const { error } = await supabase.rpc('register_push_token', { p_token: token });
   if (error) throw error;
   await SecureStore.setItemAsync(TOKEN_KEY, token);
   return 'enabled';
