@@ -82,13 +82,13 @@ isOneToOne: false
                   ]
                 },"bookings": {
                   Row: {
-                    "barber_id": string,"cancellation_reason": string | null,"cancelled_at": string | null,"cancelled_by": string | null,"created_at": string,"customer_id": string,"customer_notes": string | null,"duration_minutes": number,"ends_at": string,"id": string,"price_paise": number,"service_id": string,"shop_id": string,"starts_at": string,"status": Database["public"]['Enums']["booking_status"],"updated_at": string
+                    "barber_id": string | null,"cancellation_reason": string | null,"cancelled_at": string | null,"cancelled_by": string | null,"created_at": string,"customer_id": string,"customer_notes": string | null,"duration_minutes": number,"ends_at": string,"hold_expires_at": string | null,"id": string,"price_paise": number,"seat_id": string | null,"service_id": string | null,"shop_id": string,"starts_at": string,"status": Database["public"]['Enums']["booking_status"],"updated_at": string
                   }
                   Insert: {
-                    "barber_id": string,"cancellation_reason"?: string | null,"cancelled_at"?: string | null,"cancelled_by"?: string | null,"created_at"?: string,"customer_id": string,"customer_notes"?: string | null,"duration_minutes": number,"ends_at": string,"id"?: string,"price_paise": number,"service_id": string,"shop_id": string,"starts_at": string,"status"?: Database["public"]['Enums']["booking_status"],"updated_at"?: string
+                    "barber_id"?: string | null,"cancellation_reason"?: string | null,"cancelled_at"?: string | null,"cancelled_by"?: string | null,"created_at"?: string,"customer_id": string,"customer_notes"?: string | null,"duration_minutes": number,"ends_at": string,"hold_expires_at"?: string | null,"id"?: string,"price_paise": number,"seat_id"?: string | null,"service_id"?: string | null,"shop_id": string,"starts_at": string,"status"?: Database["public"]['Enums']["booking_status"],"updated_at"?: string
                   }
                   Update: {
-                    "barber_id"?: string,"cancellation_reason"?: string | null,"cancelled_at"?: string | null,"cancelled_by"?: string | null,"created_at"?: string,"customer_id"?: string,"customer_notes"?: string | null,"duration_minutes"?: number,"ends_at"?: string,"id"?: string,"price_paise"?: number,"service_id"?: string,"shop_id"?: string,"starts_at"?: string,"status"?: Database["public"]['Enums']["booking_status"],"updated_at"?: string
+                    "barber_id"?: string | null,"cancellation_reason"?: string | null,"cancelled_at"?: string | null,"cancelled_by"?: string | null,"created_at"?: string,"customer_id"?: string,"customer_notes"?: string | null,"duration_minutes"?: number,"ends_at"?: string,"hold_expires_at"?: string | null,"id"?: string,"price_paise"?: number,"seat_id"?: string | null,"service_id"?: string | null,"shop_id"?: string,"starts_at"?: string,"status"?: Database["public"]['Enums']["booking_status"],"updated_at"?: string
                   }
                   Relationships: [
                     {
@@ -120,6 +120,12 @@ isOneToOne: false
       columns: ["shop_id"]
 isOneToOne: false
       referencedRelation: "shops"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "bookings_seat_id_fkey"
+      columns: ["seat_id"]
+isOneToOne: false
+      referencedRelation: "seats"
       referencedColumns: ["id"]
     }
                   ]
@@ -324,6 +330,44 @@ isOneToOne: false
       referencedRelation: "barbers"
       referencedColumns: ["id","shop_id"]
     }
+                  ]
+                },"shows": {
+                  Row: {
+                    "created_at": string,"ends_at": string,"id": string,"is_active": boolean,"shop_id": string,"starts_at": string,"title": string,"updated_at": string
+                  }
+                  Insert: {
+                    "created_at"?: string,"ends_at": string,"id"?: string,"is_active"?: boolean,"shop_id": string,"starts_at": string,"title": string,"updated_at"?: string
+                  }
+                  Update: {
+                    "created_at"?: string,"ends_at"?: string,"id"?: string,"is_active"?: boolean,"shop_id"?: string,"starts_at"?: string,"title"?: string,"updated_at"?: string
+                  }
+                  Relationships: [
+                    {
+                      foreignKeyName: "shows_shop_id_fkey"
+                      columns: ["shop_id"]
+                      isOneToOne: false
+                      referencedRelation: "shops"
+                      referencedColumns: ["id"]
+                    }
+                  ]
+                },"seats": {
+                  Row: {
+                    "created_at": string,"id": string,"is_active": boolean,"label": string,"price_paise": number,"show_id": string
+                  }
+                  Insert: {
+                    "created_at"?: string,"id"?: string,"is_active"?: boolean,"label": string,"price_paise": number,"show_id": string
+                  }
+                  Update: {
+                    "created_at"?: string,"id"?: string,"is_active"?: boolean,"label"?: string,"price_paise"?: number,"show_id"?: string
+                  }
+                  Relationships: [
+                    {
+                      foreignKeyName: "seats_show_id_fkey"
+                      columns: ["show_id"]
+                      isOneToOne: false
+                      referencedRelation: "shows"
+                      referencedColumns: ["id"]
+                    }
                   ]
                 }
           }
@@ -621,10 +665,16 @@ isOneToOne: false
         to: "profiles"
         isOneToOne: true
         isSetofReturn: false
-      } }
+      } },
+"register_push_token":
+{ Args: { "p_token": string }; Returns: undefined },
+"hold_seat":
+{ Args: { "p_seat_id": string, "p_show_id": string }; Returns: Database["public"]["Tables"]["bookings"]["Row"] },
+"hold_seats":
+{ Args: { "p_seat_ids": (string)[], "p_show_id": string }; Returns: Database["public"]["Tables"]["bookings"]["Row"][] }
           }
           Enums: {
-            "booking_status": "pending"|"confirmed"|"completed"|"cancelled"|"no_show","payment_status": "created"|"authorized"|"captured"|"failed"|"refunded","shop_role": "owner"|"manager"|"barber"
+            "booking_status": "pending"|"confirmed"|"completed"|"cancelled"|"no_show"|"held"|"expired","payment_status": "created"|"authorized"|"captured"|"failed"|"refunded","shop_role": "owner"|"manager"|"barber"
           }
           CompositeTypes: {
             [_ in never]: never
@@ -740,7 +790,7 @@ export type CompositeTypes<
 export const Constants = {
   "public": {
           Enums: {
-            "booking_status": ["pending", "confirmed", "completed", "cancelled", "no_show"],"payment_status": ["created", "authorized", "captured", "failed", "refunded"],"shop_role": ["owner", "manager", "barber"]
+            "booking_status": ["pending", "confirmed", "completed", "cancelled", "no_show", "held", "expired"],"payment_status": ["created", "authorized", "captured", "failed", "refunded"],"shop_role": ["owner", "manager", "barber"]
           }
         }
 } as const

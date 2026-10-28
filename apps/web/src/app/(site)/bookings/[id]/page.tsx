@@ -64,8 +64,19 @@ export default async function BookingPage({
 
       <dl className="divide-y rounded-xl border">
         <Row label={m.booking.summary.when} value={when} />
-        <Row label={m.booking.summary.service} value={`${booking.service?.name ?? ""} · ${format(m.shop.minutes, { count: booking.duration_minutes })}`} />
+        {booking.service && (
+          <Row
+            label={m.booking.summary.service}
+            value={`${booking.service.name} · ${format(m.shop.minutes, { count: booking.duration_minutes })}`}
+          />
+        )}
         {booking.barber && <Row label={m.booking.summary.barber} value={booking.barber.display_name} />}
+        {booking.seat && (
+          <>
+            {booking.seat.show?.title && <Row label="Event" value={booking.seat.show.title} />}
+            <Row label="Seat" value={booking.seat.label} />
+          </>
+        )}
         <Row label={m.booking.summary.price} value={formatPricePaise(booking.price_paise, locale)} />
         <div className="flex items-center justify-between px-4 py-3">
           <dt className="text-sm text-muted-foreground">{m.confirmation.status}</dt>

@@ -18,6 +18,8 @@ export function StatusBadge({ status }: { status: BookingStatus }) {
     completed: { bg: colors.secondary, fg: colors.text, border: colors.secondary },
     cancelled: { bg: 'transparent', fg: colors.muted, border: colors.border },
     no_show: { bg: 'transparent', fg: colors.danger, border: colors.danger },
+    held: { bg: 'transparent', fg: colors.text, border: colors.border },
+    expired: { bg: 'transparent', fg: colors.muted, border: colors.border },
   };
   return (
     <View style={[styles.badge, { backgroundColor: palette[status].bg, borderColor: palette[status].border }]}>
@@ -38,7 +40,7 @@ export interface BookingListItem {
   starts_at: string;
   ends_at: string;
   status: BookingStatus;
-  barberId: string;
+  barberId: string | null;
   customerName: string | null;
   serviceName: string;
   barberName: string;

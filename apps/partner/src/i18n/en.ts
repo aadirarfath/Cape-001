@@ -72,6 +72,14 @@ export const en = {
       PHONE_ALREADY_INVITED: 'This number is already used for another barber in your shop.',
       BARBER_ALREADY_LINKED: 'This barber already uses the app.',
       INVALID_WORKING_HOURS: 'Please check the working hours: a shift ends before it starts, or two shifts overlap.',
+      // Seat reservation (partner app shows these if a staff member touches the booking)
+      SHOW_NOT_FOUND: "We couldn't find that show.",
+      SEAT_NOT_FOUND: "That seat isn't available.",
+      SEAT_TAKEN: 'That seat is already reserved.',
+      SEAT_LIMIT_REACHED: "You've reached the maximum seats per show.",
+      HOLD_EXPIRED: 'The seat hold expired.',
+      // Shop management
+      TOO_MANY_PENDING_SHOPS: 'You already have 3 shops awaiting approval.',
     } satisfies Record<DbErrorCode, string>,
   },
 
@@ -81,6 +89,8 @@ export const en = {
     completed: 'Done',
     cancelled: 'Cancelled',
     no_show: 'Did not come',
+    held: 'Held',
+    expired: 'Expired',
   } satisfies Record<Enums<'booking_status'>, string>,
 
   roles: {

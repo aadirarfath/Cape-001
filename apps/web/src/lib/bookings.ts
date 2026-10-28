@@ -7,7 +7,8 @@ export const BOOKING_SELECT = `
   id, starts_at, ends_at, status, price_paise, duration_minutes, customer_notes, created_at,
   shop:shops (name, slug, address_line, area, city, phone, cancellation_cutoff_minutes),
   service:services (name),
-  barber:barbers (display_name)
+  barber:barbers (display_name),
+  seat:seats (label, show:shows (title))
 ` as const;
 
 type Supabase = Awaited<ReturnType<typeof createClient>>;

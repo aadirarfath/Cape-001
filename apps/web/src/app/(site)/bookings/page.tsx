@@ -102,7 +102,13 @@ function BookingList({
                 )}
               </p>
               <p className="truncate text-sm text-muted-foreground">
-                {[booking.service?.name, booking.barber?.display_name, formatPricePaise(booking.price_paise, locale)]
+                {[
+                  booking.seat
+                    ? `${booking.seat.show?.title ? `${booking.seat.show.title} · ` : ""}Seat ${booking.seat.label}`
+                    : booking.service?.name,
+                  booking.barber?.display_name,
+                  formatPricePaise(booking.price_paise, locale),
+                ]
                   .filter(Boolean)
                   .join(" · ")}
               </p>

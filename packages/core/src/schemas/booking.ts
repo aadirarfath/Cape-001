@@ -80,3 +80,23 @@ export const shopBookingSettingsSchema = z.object({
   cancellation_cutoff_minutes: z.number().int().min(0).max(10_080),
 });
 export type ShopBookingSettings = z.infer<typeof shopBookingSettingsSchema>;
+
+// Seat reservation ---------------------------------------------------------
+
+/** hold_seat: hold a single seat for the calling user. */
+export const holdSeatInputSchema = z.object({
+  p_show_id: uuidSchema,
+  p_seat_id: uuidSchema,
+});
+export type HoldSeatInput = z.infer<typeof holdSeatInputSchema>;
+
+/** hold_seats: hold multiple seats in one all-or-nothing transaction. */
+export const holdSeatsInputSchema = z.object({
+  p_show_id: uuidSchema,
+  p_seat_ids: z.array(uuidSchema).min(1).max(6),
+});
+export type HoldSeatsInput = z.infer<typeof holdSeatsInputSchema>;
+
+/** Maximum seats one user may hold per show (enforced in hold_seat/hold_seats). */
+export const MAX_SEATS_PER_USER_PER_SHOW = 6;
+

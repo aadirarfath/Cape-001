@@ -212,6 +212,8 @@ export const en = {
     completed: "Completed",
     cancelled: "Cancelled",
     no_show: "Missed",
+    held: "Held",
+    expired: "Expired",
   },
 
   errors: {
@@ -251,6 +253,14 @@ export const en = {
       PHONE_ALREADY_INVITED: "That phone number is already used for another barber.",
       BARBER_ALREADY_LINKED: "This barber is already linked to an account.",
       INVALID_WORKING_HOURS: "Those working hours don't look right.",
+      // Seat reservation
+      SHOW_NOT_FOUND: "We couldn't find that show.",
+      SEAT_NOT_FOUND: "That seat isn't available.",
+      SEAT_TAKEN: "Sorry, someone just reserved that seat. Please pick another.",
+      SEAT_LIMIT_REACHED: "You've reached the maximum seats per show. Cancel a hold first.",
+      HOLD_EXPIRED: "Your seat hold expired. Please start again.",
+      // Shop management
+      TOO_MANY_PENDING_SHOPS: "You already have 3 shops waiting for approval. Please wait before creating another.",
     } satisfies Record<DbErrorCode, string>,
   },
 };

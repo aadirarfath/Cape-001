@@ -30,6 +30,14 @@ export const DB_ERROR_CODES = [
   "PHONE_ALREADY_INVITED",
   "BARBER_ALREADY_LINKED",
   "INVALID_WORKING_HOURS",
+  // Seat reservation
+  "SHOW_NOT_FOUND",
+  "SEAT_NOT_FOUND",
+  "SEAT_TAKEN",
+  "SEAT_LIMIT_REACHED",
+  "HOLD_EXPIRED",
+  // Shop management
+  "TOO_MANY_PENDING_SHOPS",
 ] as const;
 
 export type DbErrorCode = (typeof DB_ERROR_CODES)[number];
