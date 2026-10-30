@@ -4,13 +4,14 @@ import { Newsreader_600SemiBold } from '@expo-google-fonts/newsreader/600SemiBol
 import { Unbounded_600SemiBold } from '@expo-google-fonts/unbounded/600SemiBold';
 import { Unbounded_700Bold } from '@expo-google-fonts/unbounded/700Bold';
 import { useFonts } from 'expo-font';
-import { DarkTheme, DefaultTheme, Stack, ThemeProvider } from 'expo-router';
+import { DarkTheme, DefaultTheme, router, Stack, ThemeProvider } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { useEffect, useState } from 'react';
 import { View } from 'react-native';
 
 import { Body, Button, Grain, Notice, Title } from '@/components/ui';
 import { errorMessage, m } from '@/i18n';
+import { configurePushListeners } from '@/lib/push';
 import { SessionProvider, useSession } from '@/lib/session';
 import { fonts, space, useColors, useIsDark } from '@/theme';
 
@@ -82,6 +83,20 @@ function RootNavigator() {
   const needsShop = signedIn && !needsName && !shop;
   const pending = signedIn && !needsName && !!shop && !shop.isActive;
   const ready = signedIn && !needsName && !!shop?.isActive;
+
+  useEffect(() => {
+    if (ready) {
+      let cleanup: (() => void) | undefined;
+      configurePushListeners((bookingId) => {
+        router.push({ pathname: '/(app)/booking/[id]', params: { id: bookingId } });
+      }).then((unsub) => {
+        cleanup = unsub;
+      });
+      return () => {
+        cleanup?.();
+      };
+    }
+  }, [ready]);
 
   return (
     <Stack screenOptions={headerOptions}>

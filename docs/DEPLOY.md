@@ -44,12 +44,15 @@ dashboard settings, secrets and data, which migrations can't or shouldn't hold.
 
 ## Partner app (Android)
 
+*See detailed guide and build commands in [docs/PARTNER-APP-PRODUCTION-AND-APK.md](PARTNER-APP-PRODUCTION-AND-APK.md).*
+
 - [ ] EAS project created (`npx eas-cli@latest init`) so the app has a `projectId` for Expo
       push tokens.
 - [ ] Firebase project with an Android app for the package name; FCM V1 service account key
       uploaded to EAS (`eas credentials`). Without it Android pushes don't arrive.
 - [ ] Production build with `EXPO_PUBLIC_SUPABASE_URL` / `EXPO_PUBLIC_SUPABASE_ANON_KEY` of the
-      hosted project (anon key only, never service_role).
+      hosted project (anon key only, never service_role). Build standalone `.apk` using:
+      `npx eas-cli@latest build --platform android --profile preview`
 
 ## Website
 

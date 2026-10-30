@@ -1,7 +1,7 @@
 import { indianMobileSchema } from '@cape001/core';
 import { router } from 'expo-router';
 import { useState } from 'react';
-import { View } from 'react-native';
+import { Platform, View } from 'react-native';
 
 import { Body, Button, Grain, Notice, Screen, TextField, Title, Wordmark } from '@/components/ui';
 import { errorMessage, m } from '@/i18n';
@@ -49,7 +49,7 @@ export default function LoginScreen() {
           label={sending ? m.auth.login.sending : m.auth.login.sendCode}
           icon="chatbubble-ellipses"
           loading={sending}
-          disabled={Boolean(TURNSTILE_SITE_KEY && !captchaToken)}
+          disabled={Boolean(Platform.OS === 'web' && TURNSTILE_SITE_KEY && !captchaToken)}
           onPress={sendCode}
         />
       }>

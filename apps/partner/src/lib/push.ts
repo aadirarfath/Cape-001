@@ -62,6 +62,9 @@ export async function registerForPush({ ask }: { ask: boolean }): Promise<PushSt
     await Notifications.setNotificationChannelAsync(BOOKINGS_CHANNEL_ID, {
       name: m.notifications.channelName,
       importance: Notifications.AndroidImportance.HIGH,
+      vibrationPattern: [0, 250, 250, 250],
+      lightColor: '#0D0D0D',
+      sound: 'default',
     });
   }
 
@@ -92,4 +95,41 @@ export function bookingIdFromNotificationData(data: unknown): string | null {
   if (typeof data !== 'object' || data === null) return null;
   const { type, bookingId } = data as Record<string, unknown>;
   return type === 'booking' && typeof bookingId === 'string' ? bookingId : null;
+}
+
+/**
+ * Sets up foreground presentation and tap listener to route to booking details.
+ * Returns a cleanup function.
+ */
+export async function configurePushListeners(onBookingTap: (bookingId: string) => void): Promise<() => void> {
+  const reason = unsupported();
+  if (reason) return () => {};
+  const Notifications = await loadNotifications();
+
+  Notifications.setNotificationHandler({
+    handleNotification: async () => ({
+      shouldShowBanner: true,
+      shouldShowList: true,
+      shouldPlaySound: true,
+      shouldSetBadge: true,
+    }),
+  });
+
+  const sub = Notifications.addNotificationResponseReceivedListener((response) => {
+    const bookingId = bookingIdFromNotificationData(response.notification.request.content.data);
+    if (bookingId) onBookingTap(bookingId);
+  });
+
+  Notifications.getLastNotificationResponseAsync()
+    .then((response) => {
+      if (response) {
+        const bookingId = bookingIdFromNotificationData(response.notification.request.content.data);
+        if (bookingId) onBookingTap(bookingId);
+      }
+    })
+    .catch(() => {});
+
+  return () => {
+    sub.remove();
+  };
 }
