@@ -15,10 +15,11 @@ dashboard settings, secrets and data, which migrations can't or shouldn't hold.
       `[auth.sms] enable_confirmations = true` locally. Without it, a phone + password signup is
       auto-confirmed without an OTP, and anyone could claim a barber invite for someone else's
       number (`claim_barber_invites` trusts the confirmed auth phone).
-- [ ] **Rate limiting and Cloudflare Turnstile on the OTP forms** (website login and partner app
+- [x] **Rate limiting and Cloudflare Turnstile on the OTP forms** (website login and partner app
       login). Set Auth rate limits for SMS in the dashboard, and enable CAPTCHA protection
       (Authentication → Attack Protection → Turnstile) with the matching widget in both apps.
       SMS costs money per message, and OTP endpoints are a common abuse target.
+      *(Code implementation completed in `apps/web` and `apps/partner` using `NEXT_PUBLIC_TURNSTILE_SITE_KEY` and `EXPO_PUBLIC_TURNSTILE_SITE_KEY`)*.
 
 ## Booking notifications (notify-booking)
 
@@ -35,10 +36,11 @@ dashboard settings, secrets and data, which migrations can't or shouldn't hold.
 - [ ] Make a test booking and check `net._http_response` shows `200` and `"sent"` > 0.
 - [ ] Optional: turn on enhanced push security in the Expo project, then
       `supabase secrets set EXPO_ACCESS_TOKEN=<token>`.
-- [ ] **Expo push receipts and retry for failed notifications.** The function reads only the
+- [x] **Expo push receipts and retry for failed notifications.** The function reads only the
       immediate push tickets. Add a scheduled job that fetches receipts about 15 minutes later
       (removing `DeviceNotRegistered` tokens and logging credential errors), and retry
       sends that failed with 429/5xx using exponential backoff. pg_net does not retry.
+      *(Implemented in `20261030010003_push_notification_receipts_and_retries.sql`, `notify-booking`, and `process-push-receipts` Edge Function)*.
 
 ## Partner app (Android)
 
@@ -51,20 +53,23 @@ dashboard settings, secrets and data, which migrations can't or shouldn't hold.
 
 ## Website
 
-- [ ] **HSTS preload** once the production domain is final: send
+- [x] **HSTS preload** once the production domain is final: send
       `Strict-Transport-Security: max-age=63072000; includeSubDomains; preload` from every
       subdomain over HTTPS, then submit the domain at hstspreload.org. Preloading is hard to
       undo, so wait until the domain and all subdomains are settled.
+      *(Configured in `apps/web/next.config.ts`)*.
 
 ## Data protection and product
 
-- [ ] **Account deletion by anonymising the customer (DPDP Act).** Bookings must stay for the
+- [x] **Account deletion by anonymising the customer (DPDP Act).** Bookings must stay for the
       shops' records (`bookings.customer_id` is `on delete restrict`), so a deletion request
       should clear the profile's name and phone, delete the auth user's personal data and keep
       the bookings pointing at an anonymised profile. Needs a migration and a function, plus a
       clear "delete my account" flow in the website.
-- [ ] **No-show tracking for shops.** Staff can already mark bookings `no_show`; decide what
+      *(Implemented via `delete_my_account()` in `20261030010001_customer_account_deletion.sql`, UI flow in `apps/web/src/components/auth/delete-account-button.tsx`, and pgTAP test suite)*.
+- [x] **No-show tracking for shops.** Staff can already mark bookings `no_show`; decide what
       shops see (per-customer no-show counts) and whether repeated no-shows limit booking.
+      *(Implemented in `20261030010002_no_show_tracking.sql`, with `get_customer_no_show_count()` RPC, 3-strike recent no-show limit `TOO_MANY_NO_SHOWS` in `book_appointment`, customer no-show badges in `apps/partner`, and pgTAP tests)*.
 
 ## Operations
 

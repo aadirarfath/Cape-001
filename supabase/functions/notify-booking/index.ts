@@ -16,7 +16,9 @@
 import { createClient } from "npm:@supabase/supabase-js@2";
 import {
   buildMessages,
+  calculateBackoffSeconds,
   chunk,
+  extractSuccessfulTickets,
   type ExpoMessage,
   type ExpoTicket,
   parseNotifyRequest,
@@ -145,6 +147,18 @@ Deno.serve(async (req) => {
       sent += tickets.filter((t) => t.status === "ok").length;
       failed += tickets.filter((t) => t.status === "error").length;
       stale.push(...unregisteredTokens(batch, tickets));
+
+      // Save valid tickets to be checked by the receipt processor job ~15 minutes later
+      const successfulTickets = extractSuccessfulTickets(batch, tickets);
+      if (successfulTickets.length > 0) {
+        const { error: ticketInsertErr } = await supabase
+          .from("push_notification_tickets")
+          .insert(successfulTickets);
+        if (ticketInsertErr) {
+          console.warn("notify-booking: saving tickets for receipt check failed", ticketInsertErr);
+        }
+      }
+
       for (const ticket of tickets) {
         if (ticket.status === "error" && ticket.details?.error !== "DeviceNotRegistered") {
           console.warn("notify-booking: push ticket error", ticket.message, ticket.details);
@@ -152,7 +166,21 @@ Deno.serve(async (req) => {
       }
     } catch (error) {
       failed += batch.length;
-      console.error("notify-booking: sending failed", error);
+      console.error("notify-booking: sending failed, queuing for retry", error);
+
+      // Enqueue failed batch messages for exponential backoff retries
+      const retryRows = batch.map((msg) => ({
+        message: msg,
+        attempt_count: 1,
+        next_retry_at: new Date(Date.now() + calculateBackoffSeconds(1) * 1000).toISOString(),
+        last_error: error instanceof Error ? error.message : String(error),
+      }));
+      const { error: retryInsertErr } = await supabase
+        .from("push_notification_retries")
+        .insert(retryRows);
+      if (retryInsertErr) {
+        console.error("notify-booking: queuing retry failed", retryInsertErr);
+      }
     }
   }
 

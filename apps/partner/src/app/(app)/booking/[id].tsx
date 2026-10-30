@@ -38,15 +38,25 @@ export default function BookingScreen() {
       await supabase
         .from('bookings')
         .select(
-          'id, starts_at, ends_at, status, price_paise, duration_minutes, customer_notes, cancellation_reason, customer:profiles!bookings_customer_id_fkey (full_name, phone), service:services (name), barber:barbers (display_name)',
+          'id, customer_id, shop_id, starts_at, ends_at, status, price_paise, duration_minutes, customer_notes, cancellation_reason, customer:profiles!bookings_customer_id_fkey (full_name, phone), service:services (name), barber:barbers (display_name)',
         )
         .eq('id', id)
         .maybeSingle(),
     );
   }, [id], { cache: 'booking' });
 
-  if (booking.loading && !booking.data) return <LoadingView />;
   const b = booking.data;
+
+  const noShows = useLoad(async () => {
+    if (!b?.customer_id || !b?.shop_id) return 0;
+    const { data } = await supabase.rpc('get_customer_no_show_count', {
+      p_customer_id: b.customer_id,
+      p_shop_id: b.shop_id,
+    });
+    return data ?? 0;
+  }, [b?.customer_id, b?.shop_id]);
+
+  if (booking.loading && !b) return <LoadingView />;
   if (!b) {
     return (
       <Screen onRefresh={booking.refresh} refreshing={booking.refreshing}>
@@ -141,10 +151,17 @@ export default function BookingScreen() {
         <Detail label={t.duration} value={formatDuration(b.duration_minutes)} />
         <Detail label={t.price} value={formatPricePaise(b.price_paise)} />
         {b.customer_notes ? <Detail label={t.notes} value={b.customer_notes} /> : null}
+        {noShows.data && noShows.data > 0 ? (
+          <Detail label={t.noShowsAtShop} value={String(noShows.data)} />
+        ) : null}
         {b.status === 'cancelled' && b.cancellation_reason ? (
           <Muted>{format(t.cancelledBecause, { reason: b.cancellation_reason })}</Muted>
         ) : null}
       </Card>
+
+      {noShows.data && noShows.data > 0 ? (
+        <Notice tone="warning">{format(t.noShowsWarning, { count: noShows.data })}</Notice>
+      ) : null}
 
       {error ? <Notice tone="error">{error}</Notice> : null}
 

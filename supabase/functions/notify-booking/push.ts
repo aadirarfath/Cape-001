@@ -46,6 +46,12 @@ export interface ExpoTicket {
   details?: { error?: string };
 }
 
+export interface ExpoReceipt {
+  status: "ok" | "error";
+  message?: string;
+  details?: { error?: string };
+}
+
 // Notification text. Kept short: it shows on the lock screen, so no customer details.
 const MESSAGES = {
   created: { title: "New booking", body: "{service} with {barber} · {time}" },
@@ -131,4 +137,67 @@ export function unregisteredTokens(messages: ExpoMessage[], tickets: ExpoTicket[
       ? [messages[i].to]
       : [],
   );
+}
+
+/** Extracts successful ticket IDs mapped to the recipient token for later receipt checks. */
+export function extractSuccessfulTickets(
+  messages: ExpoMessage[],
+  tickets: ExpoTicket[],
+): Array<{ ticket_id: string; token: string }> {
+  const result: Array<{ ticket_id: string; token: string }> = [];
+  for (let i = 0; i < tickets.length; i++) {
+    const t = tickets[i];
+    const m = messages[i];
+    if (t?.status === "ok" && t.id && m?.to) {
+      result.push({ ticket_id: t.id, token: m.to });
+    }
+  }
+  return result;
+}
+
+/** Check if an HTTP status code returned by Expo push API is retryable (429 or 5xx). */
+export function isRetryablePushError(status: number): boolean {
+  return status === 429 || (status >= 500 && status <= 599);
+}
+
+/** Calculates exponential backoff in seconds for retries (e.g. attempt 0 -> 60s, attempt 1 -> 120s, max 3600s). */
+export function calculateBackoffSeconds(
+  attempt: number,
+  baseSeconds: number = 60,
+  maxSeconds: number = 3600,
+): number {
+  return Math.min(maxSeconds, baseSeconds * Math.pow(2, Math.max(0, attempt)));
+}
+
+/** Identifies tokens to remove from push receipts that report DeviceNotRegistered. */
+export function unregisteredTokensFromReceipts(
+  receipts: Record<string, ExpoReceipt>,
+  ticketTokenMap: Record<string, string>,
+): string[] {
+  const stale: string[] = [];
+  for (const [ticketId, receipt] of Object.entries(receipts)) {
+    if (receipt.status === "error" && receipt.details?.error === "DeviceNotRegistered") {
+      const token = ticketTokenMap[ticketId];
+      if (token && !stale.includes(token)) {
+        stale.push(token);
+      }
+    }
+  }
+  return stale;
+}
+
+/** Finds any credential or configuration errors reported in push receipts. */
+export function findCredentialErrors(
+  receipts: Record<string, ExpoReceipt>,
+): Array<{ ticketId: string; error: string; message?: string }> {
+  const credentialErrors: Array<{ ticketId: string; error: string; message?: string }> = [];
+  for (const [ticketId, receipt] of Object.entries(receipts)) {
+    if (receipt.status === "error") {
+      const err = receipt.details?.error ?? "";
+      if (err.includes("Credential") || err === "InvalidCredentials" || err === "MessageTooBig") {
+        credentialErrors.push({ ticketId, error: err, message: receipt.message });
+      }
+    }
+  }
+  return credentialErrors;
 }

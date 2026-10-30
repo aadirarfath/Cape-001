@@ -38,6 +38,10 @@ export const DB_ERROR_CODES = [
   "HOLD_EXPIRED",
   // Shop management
   "TOO_MANY_PENDING_SHOPS",
+  // DPDP Act Account Deletion
+  "CANNOT_DELETE_SHOP_OWNER",
+  // No-show policy
+  "TOO_MANY_NO_SHOWS",
 ] as const;
 
 export type DbErrorCode = (typeof DB_ERROR_CODES)[number];
@@ -49,6 +53,3 @@ export function getDbErrorCode(error: { message?: string } | null | undefined): 
     ? (message as DbErrorCode)
     : null;
 }
-
-/** Maximum active future bookings per customer, enforced by book_appointment. */
-export const MAX_ACTIVE_BOOKINGS_PER_CUSTOMER = 3;

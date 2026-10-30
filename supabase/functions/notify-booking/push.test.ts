@@ -4,13 +4,18 @@ import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 import {
   buildMessages,
+  calculateBackoffSeconds,
   chunk,
+  extractSuccessfulTickets,
   type ExpoMessage,
+  findCredentialErrors,
   formatBookingTime,
+  isRetryablePushError,
   parseNotifyRequest,
   secretsMatch,
   shouldNotify,
   unregisteredTokens,
+  unregisteredTokensFromReceipts,
 } from "./push.ts";
 
 const BOOKING_ID = "3f0c8f1e-2a4b-4c6d-8e9f-0a1b2c3d4e5f";
@@ -118,5 +123,67 @@ describe("unregisteredTokens", () => {
       { status: "error" as const, message: "slow down", details: { error: "MessageRateExceeded" } },
     ];
     assert.deepEqual(unregisteredTokens(messages, tickets), ["ExponentPushToken[gone]"]);
+  });
+});
+
+describe("extractSuccessfulTickets", () => {
+  it("pairs ok ticket ids with the message tokens", () => {
+    const messages = buildMessages("created", booking, [
+      "ExponentPushToken[tok1]",
+      "ExponentPushToken[tok2]",
+    ]) as ExpoMessage[];
+    const tickets = [
+      { status: "ok" as const, id: "ticket-123" },
+      { status: "error" as const, message: "failed" },
+    ];
+    const result = extractSuccessfulTickets(messages, tickets);
+    assert.deepEqual(result, [{ ticket_id: "ticket-123", token: "ExponentPushToken[tok1]" }]);
+  });
+});
+
+describe("retry and backoff helpers", () => {
+  it("identifies retryable HTTP statuses (429, 5xx)", () => {
+    assert.equal(isRetryablePushError(429), true);
+    assert.equal(isRetryablePushError(500), true);
+    assert.equal(isRetryablePushError(503), true);
+    assert.equal(isRetryablePushError(400), false);
+    assert.equal(isRetryablePushError(404), false);
+    assert.equal(isRetryablePushError(200), false);
+  });
+
+  it("calculates exponential backoff", () => {
+    assert.equal(calculateBackoffSeconds(0), 60);
+    assert.equal(calculateBackoffSeconds(1), 120);
+    assert.equal(calculateBackoffSeconds(2), 240);
+    assert.equal(calculateBackoffSeconds(3), 480);
+    assert.equal(calculateBackoffSeconds(10), 3600); // capped at max
+  });
+});
+
+describe("receipt helpers", () => {
+  it("extracts DeviceNotRegistered tokens from receipts", () => {
+    const receipts = {
+      "t1": { status: "ok" as const },
+      "t2": { status: "error" as const, details: { error: "DeviceNotRegistered" } },
+      "t3": { status: "error" as const, details: { error: "InvalidCredentials" } },
+    };
+    const ticketMap = {
+      "t1": "ExponentPushToken[1]",
+      "t2": "ExponentPushToken[2]",
+      "t3": "ExponentPushToken[3]",
+    };
+    const stale = unregisteredTokensFromReceipts(receipts, ticketMap);
+    assert.deepEqual(stale, ["ExponentPushToken[2]"]);
+  });
+
+  it("finds credential errors from receipts", () => {
+    const receipts = {
+      "t1": { status: "ok" as const },
+      "t2": { status: "error" as const, message: "Bad credentials", details: { error: "InvalidCredentials" } },
+    };
+    const errors = findCredentialErrors(receipts);
+    assert.equal(errors.length, 1);
+    assert.equal(errors[0].ticketId, "t2");
+    assert.equal(errors[0].error, "InvalidCredentials");
   });
 });

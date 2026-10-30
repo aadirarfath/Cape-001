@@ -175,6 +175,14 @@ export const en = {
     loginTitle: "Log in",
     loginSubtitle: "Use your mobile number to see and manage your bookings.",
     logout: "Log out",
+    deleteAccount: "Delete account",
+    deleteAccountTitle: "Delete account (DPDP Act)",
+    deleteAccountDescription:
+      "Under the DPDP Act, deleting your account will permanently remove your name and phone number. Past booking records will be retained anonymously for shop tax and accounting records. Any active upcoming bookings will be cancelled.",
+    deleteAccountConfirm: "Permanently delete my account",
+    deleteAccountCancel: "Keep my account",
+    deleteAccountDeleting: "Deleting…",
+    deleteAccountSuccess: "Your account and personal data have been deleted.",
   },
 
   confirmation: {
@@ -261,6 +269,10 @@ export const en = {
       HOLD_EXPIRED: "Your seat hold expired. Please start again.",
       // Shop management
       TOO_MANY_PENDING_SHOPS: "You already have 3 shops waiting for approval. Please wait before creating another.",
+      // DPDP Act Account Deletion
+      CANNOT_DELETE_SHOP_OWNER: "You are the owner of a shop. Please transfer shop ownership before deleting your account.",
+      // No-show policy
+      TOO_MANY_NO_SHOWS: "You have missed multiple appointments at this shop. Please contact the shop directly to book.",
     } satisfies Record<DbErrorCode, string>,
   },
 };

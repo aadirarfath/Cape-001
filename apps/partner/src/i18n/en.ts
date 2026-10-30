@@ -80,6 +80,8 @@ export const en = {
       HOLD_EXPIRED: 'The seat hold expired.',
       // Shop management
       TOO_MANY_PENDING_SHOPS: 'You already have 3 shops awaiting approval.',
+      CANNOT_DELETE_SHOP_OWNER: 'Shop owners cannot delete their account. Transfer ownership first.',
+      TOO_MANY_NO_SHOWS: 'This customer has missed too many appointments at this shop.',
     } satisfies Record<DbErrorCode, string>,
   },
 
@@ -229,6 +231,8 @@ export const en = {
     reasonPlaceholder: 'e.g. Barber is unwell',
     cancelledBecause: 'Cancelled: {reason}',
     notFound: 'This booking was not found.',
+    noShowsAtShop: 'Missed at this shop',
+    noShowsWarning: 'This customer has missed {count} prior appointments at this shop.',
   },
 
   manage: {

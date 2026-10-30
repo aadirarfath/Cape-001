@@ -12,12 +12,13 @@ function contentSecurityPolicy(nonce: string) {
 
   return [
     `default-src 'self'`,
-    `script-src 'self' 'nonce-${nonce}' 'strict-dynamic'${isDev ? " 'unsafe-eval'" : ""}`,
+    `script-src 'self' 'nonce-${nonce}' https://challenges.cloudflare.com 'strict-dynamic'${isDev ? " 'unsafe-eval'" : ""}`,
     // Inline style attributes from React components; scripts are what the nonce protects.
     `style-src 'self' 'unsafe-inline'`,
     `img-src 'self' blob: data: ${supabase}`,
     `font-src 'self'`,
-    `connect-src 'self' ${supabase}${isDev ? " ws:" : ""}`,
+    `connect-src 'self' https://challenges.cloudflare.com ${supabase}${isDev ? " ws:" : ""}`,
+    `frame-src 'self' https://challenges.cloudflare.com`,
     `object-src 'none'`,
     `base-uri 'self'`,
     `form-action 'self'`,
@@ -44,7 +45,7 @@ export const config = {
   matcher: [
     {
       // Everything except static assets (images, video) and image optimisation.
-      source: "/((?!_next/static|_next/image|favicon.ico|.*\.(?:svg|png|jpg|jpeg|gif|webp|ico|mp4|webm)$).*)",
+      source: "/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico|mp4|webm)$).*)",
       missing: [
         { type: "header", key: "next-router-prefetch" },
         { type: "header", key: "purpose", value: "prefetch" },

@@ -3,6 +3,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { ChevronRight } from "lucide-react";
 import { formatInAppTimeZone, formatPricePaise } from "@cape001/core";
+import { DeleteAccountButton } from "@/components/auth/delete-account-button";
 import { LogoutButton } from "@/components/auth/logout-button";
 import { StatusBadge } from "@/components/booking/status-badge";
 import { buttonVariants } from "@/components/ui/button";
@@ -30,7 +31,7 @@ export default async function MyBookingsPage() {
   const past = bookings.filter((b) => !isUpcoming(b, now));
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-6">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold tracking-tight">{m.bookings.title}</h1>
         <LogoutButton />
@@ -50,6 +51,16 @@ export default async function MyBookingsPage() {
           <BookingList bookings={past} empty={m.bookings.noPast} m={m} />
         </TabsContent>
       </Tabs>
+
+      <div className="mt-8 pt-6 border-t">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+          <div>
+            <p className="text-sm font-medium">{m.auth.deleteAccountTitle}</p>
+            <p className="text-xs text-muted-foreground">Manage personal data under the DPDP Act</p>
+          </div>
+          <DeleteAccountButton />
+        </div>
+      </div>
     </div>
   );
 }

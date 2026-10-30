@@ -370,6 +370,67 @@ isOneToOne: false
                     }
                   ]
                 }
+          ,
+                "push_notification_tickets": {
+                  Row: {
+                    "created_at": string,
+                    "error_details": Json | null,
+                    "id": string,
+                    "status": string,
+                    "ticket_id": string,
+                    "token": string
+                  }
+                  Insert: {
+                    "created_at"?: string,
+                    "error_details"?: Json | null,
+                    "id"?: string,
+                    "status"?: string,
+                    "ticket_id": string,
+                    "token": string
+                  }
+                  Update: {
+                    "created_at"?: string,
+                    "error_details"?: Json | null,
+                    "id"?: string,
+                    "status"?: string,
+                    "ticket_id"?: string,
+                    "token"?: string
+                  }
+                  Relationships: []
+                },
+                "push_notification_retries": {
+                  Row: {
+                    "attempt_count": number,
+                    "created_at": string,
+                    "id": string,
+                    "last_error": string | null,
+                    "message": Json,
+                    "next_retry_at": string,
+                    "status": string,
+                    "updated_at": string
+                  }
+                  Insert: {
+                    "attempt_count"?: number,
+                    "created_at"?: string,
+                    "id"?: string,
+                    "last_error"?: string | null,
+                    "message": Json,
+                    "next_retry_at"?: string,
+                    "status"?: string,
+                    "updated_at"?: string
+                  }
+                  Update: {
+                    "attempt_count"?: number,
+                    "created_at"?: string,
+                    "id"?: string,
+                    "last_error"?: string | null,
+                    "message"?: Json,
+                    "next_retry_at"?: string,
+                    "status"?: string,
+                    "updated_at"?: string
+                  }
+                  Relationships: []
+                }
           }
           Views: {
             [_ in never]: never
@@ -672,6 +733,9 @@ isOneToOne: false
 { Args: { "p_seat_id": string, "p_show_id": string }; Returns: Database["public"]["Tables"]["bookings"]["Row"] },
 "hold_seats":
 { Args: { "p_seat_ids": (string)[], "p_show_id": string }; Returns: Database["public"]["Tables"]["bookings"]["Row"][] }
+          ,
+            "delete_my_account": { Args: Record<string, never>; Returns: void },
+            "get_customer_no_show_count": { Args: { "p_customer_id": string; "p_shop_id"?: string | null }; Returns: number }
           }
           Enums: {
             "booking_status": "pending"|"confirmed"|"completed"|"cancelled"|"no_show"|"held"|"expired","payment_status": "created"|"authorized"|"captured"|"failed"|"refunded","shop_role": "owner"|"manager"|"barber"

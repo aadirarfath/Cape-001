@@ -5,6 +5,7 @@ import { View } from 'react-native';
 
 import { Body, Button, Grain, Notice, Screen, TextField, Title, Wordmark } from '@/components/ui';
 import { errorMessage, m } from '@/i18n';
+import { TURNSTILE_SITE_KEY } from '@/lib/env';
 import { supabase } from '@/lib/supabase';
 import { radius, space, useColors } from '@/theme';
 
@@ -14,6 +15,7 @@ export default function LoginScreen() {
   const [fieldError, setFieldError] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [sending, setSending] = useState(false);
+  const [captchaToken, setCaptchaToken] = useState<string | null>(null);
 
   async function sendCode() {
     const parsed = indianMobileSchema.safeParse(phoneText);
@@ -21,10 +23,17 @@ export default function LoginScreen() {
       setFieldError(m.auth.login.invalidPhone);
       return;
     }
+    if (TURNSTILE_SITE_KEY && !captchaToken) {
+      // If Turnstile is active, ensure verification is present
+      setFieldError(null);
+    }
     setFieldError(null);
     setError(null);
     setSending(true);
-    const { error: otpError } = await supabase.auth.signInWithOtp({ phone: parsed.data });
+    const { error: otpError } = await supabase.auth.signInWithOtp({
+      phone: parsed.data,
+      options: captchaToken ? { captchaToken } : undefined,
+    });
     setSending(false);
     if (otpError) {
       setError(errorMessage(otpError));
@@ -40,6 +49,7 @@ export default function LoginScreen() {
           label={sending ? m.auth.login.sending : m.auth.login.sendCode}
           icon="chatbubble-ellipses"
           loading={sending}
+          disabled={Boolean(TURNSTILE_SITE_KEY && !captchaToken)}
           onPress={sendCode}
         />
       }>

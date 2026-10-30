@@ -400,6 +400,9 @@ deno_version = 2
 [functions.notify-booking]
 verify_jwt = false
 
+[functions.process-push-receipts]
+verify_jwt = false
+
 [analytics]
 enabled = true
 port = 54327

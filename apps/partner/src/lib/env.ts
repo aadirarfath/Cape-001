@@ -14,3 +14,4 @@ export const SUPABASE_ANON_KEY = required(
   'EXPO_PUBLIC_SUPABASE_ANON_KEY',
   process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY,
 );
+export const TURNSTILE_SITE_KEY = process.env.EXPO_PUBLIC_TURNSTILE_SITE_KEY ?? '';

@@ -5,12 +5,17 @@ import { createPublicClient } from "@/lib/supabase/public";
 export const revalidate = 3600;
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const { data: shops, error } = await createPublicClient()
-    .from("shops")
-    .select("slug, updated_at")
-    .eq("is_active", true)
-    .order("slug");
-  if (error) throw error;
+  let shops: Array<{ slug: string; updated_at: string }> = [];
+  try {
+    const { data, error } = await createPublicClient()
+      .from("shops")
+      .select("slug, updated_at")
+      .eq("is_active", true)
+      .order("slug");
+    if (!error && data) shops = data;
+  } catch {
+    // If database is unreachable during static build, return base routes
+  }
 
   return [
     { url: SITE_URL, changeFrequency: "weekly", priority: 1 },

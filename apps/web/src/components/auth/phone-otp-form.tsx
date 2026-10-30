@@ -10,7 +10,9 @@ import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp
 import { Label } from "@/components/ui/label";
 import { format } from "@/i18n";
 import { useMessages } from "@/i18n/provider";
+import { TURNSTILE_SITE_KEY } from "@/lib/env";
 import { createClient } from "@/lib/supabase/browser";
+import { Turnstile } from "./turnstile";
 
 const RESEND_AFTER_SECONDS = 30;
 
@@ -23,6 +25,7 @@ export function PhoneOtpForm({ onVerified }: { onVerified: () => void }) {
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [resendIn, setResendIn] = useState(0);
+  const [captchaToken, setCaptchaToken] = useState<string | null>(null);
 
   useEffect(() => {
     if (resendIn <= 0) return;
@@ -31,9 +34,16 @@ export function PhoneOtpForm({ onVerified }: { onVerified: () => void }) {
   }, [resendIn]);
 
   async function sendCode(e164: string) {
+    if (TURNSTILE_SITE_KEY && !captchaToken) {
+      setError(m.auth.invalidPhone || "Please complete the verification check.");
+      return;
+    }
     setPending(true);
     setError(null);
-    const { error } = await createClient().auth.signInWithOtp({ phone: e164 });
+    const { error } = await createClient().auth.signInWithOtp({
+      phone: e164,
+      options: captchaToken ? { captchaToken } : undefined,
+    });
     setPending(false);
     if (error) {
       setError(error.status === 429 ? m.auth.tooManyRequests : m.auth.sendFailed);
@@ -95,12 +105,26 @@ export function PhoneOtpForm({ onVerified }: { onVerified: () => void }) {
             />
           </div>
         </div>
+
+        {TURNSTILE_SITE_KEY && (
+          <Turnstile
+            siteKey={TURNSTILE_SITE_KEY}
+            onVerify={(token) => setCaptchaToken(token)}
+            onExpire={() => setCaptchaToken(null)}
+          />
+        )}
+
         {error && (
           <Alert variant="destructive" id="phone-error">
             <AlertDescription>{error}</AlertDescription>
           </Alert>
         )}
-        <Button type="submit" size="lg" className="h-11 w-full" disabled={pending}>
+        <Button
+          type="submit"
+          size="lg"
+          className="h-11 w-full"
+          disabled={pending || Boolean(TURNSTILE_SITE_KEY && !captchaToken)}
+        >
           {pending && <Loader2 className="animate-spin" aria-hidden />}
           {pending ? m.auth.sending : m.auth.sendCode}
         </Button>
