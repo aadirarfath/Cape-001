@@ -8,6 +8,7 @@ import { buttonVariants } from "@/components/ui/button";
 import { ShopPhotos } from "@/components/shops/shop-photos";
 import { format, getMessages } from "@/i18n";
 import { SITE_URL, SUPABASE_URL } from "@/lib/env";
+import { Breadcrumbs } from "@/components/site/breadcrumbs";
 import { getShopBySlug, mapsSearchUrl, type ShopDetails } from "@/lib/shops";
 
 type Params = Promise<{ slug: string }>;
@@ -97,6 +98,7 @@ export default async function ShopPage({ params }: { params: Params }) {
 
   return (
     <article className="space-y-8 pb-20">
+      <Breadcrumbs siteUrl={SITE_URL} items={[{ label: "Home", href: "/" }, { label: "Shops", href: "/shops" }, { label: shop.name }]} />
       {/* Browsers blank the nonce attribute after load, so React would report a false mismatch. */}
       <script
         type="application/ld+json"
@@ -181,7 +183,7 @@ export default async function ShopPage({ params }: { params: Params }) {
               <li key={barber.id} className="flex items-center gap-3 rounded-xl border p-3">
                 {barber.avatar_url?.startsWith(SUPABASE_URL) ? (
                   // eslint-disable-next-line @next/next/no-img-element -- Supabase Storage URL; see ShopPhotos
-                  <img src={barber.avatar_url} alt="" className="size-12 rounded-full object-cover" />
+                  <img src={barber.avatar_url} alt={barber.display_name} loading="lazy" className="size-12 rounded-full object-cover" />
                 ) : (
                   <span
                     aria-hidden

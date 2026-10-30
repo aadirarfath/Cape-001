@@ -5,16 +5,23 @@ import { getMessages } from "@/i18n";
 export function SiteFooter() {
   const m = getMessages();
 
+  const navLinks = [
+    { href: "/#book", label: m.site.nav.book },
+    { href: "/bookings", label: m.site.nav.myBookings },
+    { href: "/#partners", label: m.site.nav.partners },
+  ];
+
+  const legalLinks = [
+    { href: "/privacy", label: "Privacy policy" },
+    { href: "/contact", label: "Contact" },
+  ];
+
   return (
     <footer className="relative overflow-hidden bg-ink text-paper">
       <div className="grain pointer-events-none absolute inset-0 opacity-[0.18] mix-blend-overlay" aria-hidden />
       <div className="relative mx-auto max-w-[1200px] px-5 pb-8 pt-20 sm:pt-28">
-        <nav className="flex flex-wrap gap-2 text-sm">
-          {[
-            { href: "/#book", label: m.site.nav.book },
-            { href: "/bookings", label: m.site.nav.myBookings },
-            { href: "/#partners", label: m.site.nav.partners },
-          ].map((link) => (
+        <nav aria-label="Footer navigation" className="flex flex-wrap gap-2 text-sm">
+          {navLinks.map((link) => (
             <Link
               key={link.href}
               href={link.href}
@@ -30,8 +37,19 @@ export function SiteFooter() {
         >
           {m.landing.wordmark}
         </p>
-        <div className="mt-8 flex flex-wrap items-center justify-between gap-2 border-t border-paper/15 pt-6 text-xs text-paper/60">
+        <div className="mt-8 flex flex-wrap items-center justify-between gap-4 border-t border-paper/15 pt-6 text-xs text-paper/60">
           <span>{m.site.footer}</span>
+          <nav aria-label="Legal links" className="flex gap-4">
+            {legalLinks.map((link) => (
+              <Link
+                key={link.href}
+                href={link.href}
+                className="hover:text-paper transition-colors"
+              >
+                {link.label}
+              </Link>
+            ))}
+          </nav>
           <span className="font-display text-xs tracking-[0.2em]">{m.site.footerMade}</span>
         </div>
       </div>

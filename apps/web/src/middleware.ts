@@ -12,12 +12,13 @@ function contentSecurityPolicy(nonce: string) {
 
   return [
     `default-src 'self'`,
-    `script-src 'self' 'nonce-${nonce}' https://challenges.cloudflare.com 'strict-dynamic'${isDev ? " 'unsafe-eval'" : ""}`,
+    // GA4 loads from googletagmanager.com; Turnstile from cloudflare.com.
+    `script-src 'self' 'nonce-${nonce}' https://challenges.cloudflare.com https://www.googletagmanager.com 'strict-dynamic'${isDev ? " 'unsafe-eval'" : ""}`,
     // Inline style attributes from React components; scripts are what the nonce protects.
     `style-src 'self' 'unsafe-inline'`,
-    `img-src 'self' blob: data: ${supabase}`,
+    `img-src 'self' blob: data: ${supabase} https://www.google-analytics.com https://www.googletagmanager.com`,
     `font-src 'self'`,
-    `connect-src 'self' https://challenges.cloudflare.com ${supabase}${isDev ? " ws:" : ""}`,
+    `connect-src 'self' https://challenges.cloudflare.com https://www.google-analytics.com https://analytics.google.com ${supabase}${isDev ? " ws:" : ""}`,
     `frame-src 'self' https://challenges.cloudflare.com`,
     `object-src 'none'`,
     `base-uri 'self'`,

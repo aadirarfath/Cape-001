@@ -5,6 +5,8 @@ import { findLegacyKochiArea, findZone, formatDistance, formatPricePaise, nearby
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { buttonVariants } from "@/components/ui/button";
 import { format, getMessages } from "@/i18n";
+import { Breadcrumbs } from "@/components/site/breadcrumbs";
+import { SITE_URL } from "@/lib/env";
 import { searchNearbyShops } from "@/lib/shops";
 
 const RADII_M = [5_000, 15_000, 50_000] as const;
@@ -67,6 +69,7 @@ export default async function ShopsPage({ searchParams }: { searchParams: Search
 
   return (
     <div className="space-y-5">
+      <Breadcrumbs siteUrl={SITE_URL} items={[{ label: "Home", href: "/" }, { label: "Barbers near you" }]} />
       <div className="flex items-start justify-between gap-3">
         <div>
           <h1 className="text-2xl font-bold tracking-tight">

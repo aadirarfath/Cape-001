@@ -18,6 +18,28 @@ const nextConfig: NextConfig = {
   async headers() {
     return [{ source: "/:path*", headers: securityHeaders }];
   },
+  // 301 redirects for legacy / common misspelled paths.
+  async redirects() {
+    return [
+      // Trailing-slash normalisation — redirect /shops/ → /shops etc.
+      { source: "/shops/", destination: "/shops", permanent: true },
+      { source: "/privacy/", destination: "/privacy", permanent: true },
+      { source: "/contact/", destination: "/contact", permanent: true },
+    ];
+  },
+  // Allow Next.js <Image> to optimise Supabase Storage images (serves WebP automatically).
+  images: {
+    remotePatterns: [
+      {
+        // Matches any Supabase project storage URL: https://<ref>.supabase.co/storage/v1/object/public/**
+        protocol: "https",
+        hostname: "*.supabase.co",
+        pathname: "/storage/v1/object/public/**",
+      },
+    ],
+    // Serve images as WebP by default (Next.js default, but explicit for clarity).
+    formats: ["image/webp", "image/avif"],
+  },
 };
 
 export default nextConfig;

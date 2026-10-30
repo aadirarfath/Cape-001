@@ -71,6 +71,29 @@ dashboard settings, secrets and data, which migrations can't or shouldn't hold.
       shops see (per-customer no-show counts) and whether repeated no-shows limit booking.
       *(Implemented in `20261030010002_no_show_tracking.sql`, with `get_customer_no_show_count()` RPC, 3-strike recent no-show limit `TOO_MANY_NO_SHOWS` in `book_appointment`, customer no-show badges in `apps/partner`, and pgTAP tests)*.
 
+## SEO and discoverability
+
+- [x] **Server-side rendering** — all pages are Next.js server components; content is in the HTML on first byte.
+- [x] **robots.txt** — `apps/web/src/app/robots.ts` disallows `/bookings`, `/login`, and `/shops/*/book`.
+- [x] **sitemap.xml** — `apps/web/src/app/sitemap.ts` lists home + all active shop pages (revalidated hourly).
+- [x] **Unique title tags** — root layout uses `template: "%s · Cape 001"`. Home, shop, results, login, bookings, privacy, contact pages all export `metadata` with unique titles.
+- [x] **Meta descriptions** — root layout default; shop pages use dynamic descriptions from DB content.
+- [x] **One H1 per page** — verified: every page has exactly one `<h1>`.
+- [x] **Canonical tags** — home `/`, shop `/shops/[slug]`, privacy `/privacy`, contact `/contact` all set `alternates.canonical`. Login and bookings are `robots: { index: false }`.
+- [x] **Open Graph images** — shop pages use the first shop photo. Root layout sets default OG image (`/opengraph-image.png`). Place a 1200×630 PNG at `apps/web/public/opengraph-image.png` before going live.
+- [x] **Custom 404 page** — `apps/web/src/app/not-found.tsx` — branded, H1, back-to-home link.
+- [x] **301 redirects** — `next.config.ts` `redirects()` normalises trailing slashes for `/shops/`, `/privacy/`, `/contact/`.
+- [x] **Alt text** — shop photos use DB `alt_text` field (falls back to shop name). Barber avatars use `barber.display_name`. Decorative elements have `aria-hidden`.
+- [x] **WebP images** — `next.config.ts` adds `images.remotePatterns` for Supabase Storage and sets `formats: ["image/webp", "image/avif"]`. Next.js `<Image>` serves WebP automatically. Barber avatar raw `<img>` has `loading="lazy"`.
+- [x] **Lazy loading** — Next.js `<Image>` is lazy by default; raw `<img>` tags below the fold have `loading="lazy"`.
+- [x] **Organization schema** — `Organization` JSON-LD block in root layout (`apps/web/src/app/layout.tsx`).
+- [x] **Breadcrumbs** — `Breadcrumbs` component with `BreadcrumbList` JSON-LD on shop and results pages (`apps/web/src/components/site/breadcrumbs.tsx`).
+- [x] **Internal links** — footer nav, shop → book, results → shop, home → shops. Privacy and Contact in footer.
+- [ ] **Google Analytics** — GA4 script component at `apps/web/src/components/site/analytics.tsx`. Set `NEXT_PUBLIC_GA_MEASUREMENT_ID=G-XXXXXXXXXX` in production. CSP updated to allow `googletagmanager.com`.
+- [ ] **Search Console** — Add site in Google Search Console, copy the HTML-tag verification value into `NEXT_PUBLIC_GSC_SITE_VERIFICATION` (root layout injects it as `<meta name="google-site-verification">`).
+- [x] **Privacy policy** — `/privacy` page at `apps/web/src/app/(site)/privacy/page.tsx`. Covers DPDP Act, data categories, retention, cookies, rights, and contact. Linked from footer.
+- [x] **Working contact form** — `/contact` page at `apps/web/src/app/(site)/contact/page.tsx` with form pre-filling a `mailto:` link plus direct email addresses. Linked from footer.
+
 ## Operations
 
 - [ ] **Point-in-Time Recovery backups** enabled on the hosted project (Database → Backups).

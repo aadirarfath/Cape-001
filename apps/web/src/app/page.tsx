@@ -1,8 +1,24 @@
+import type { Metadata } from "next";
 import { Suspense } from "react";
 import { ArrowDown } from "lucide-react";
 import { LocationPicker } from "@/components/shops/location-picker";
 import { HeroVideo } from "@/components/site/hero-video";
 import { getMessages } from "@/i18n";
+
+
+const _m = getMessages();
+
+export const metadata: Metadata = {
+  title: `${_m.site.name} — ${_m.site.tagline}`,
+  description: _m.site.description,
+  alternates: { canonical: "/" },
+  openGraph: {
+    type: "website",
+    url: "/",
+    title: `${_m.site.name} — ${_m.site.tagline}`,
+    description: _m.site.description,
+  },
+};
 
 export default function Home() {
   const m = getMessages();
